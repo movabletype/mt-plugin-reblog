@@ -34,12 +34,12 @@ var validate_success = 'Feed validated.';
 var validate_failure = 'Feed failed validation.';
 function validateFeed() {
     if (!TC.Client) return;
-	hide('reblog');
-	url = document.getElementById('url').value;
-	reporting = document.getElementById('validation-report');
-	reporting.className = '';
-	reporting.innerHTML = validate_loading;
-	var args = new Array();
+    hide('reblog');
+    url = document.getElementById('url').value;
+    reporting = document.getElementById('validation-report');
+    reporting.className = '';
+    reporting.innerHTML = validate_loading;
+    var args = new Array();
     args['json'] = '1';
     TC.Client.call({
         'load': function(c) { validateFeedCallback(c); },
@@ -47,42 +47,42 @@ function validateFeed() {
         'method': 'GET',
         'uri': ScriptURI + '?__mode=rb_validate_json&blog_id=<mt:var name="blog_id">&sourcefeed=' + url,
         'arguments': args
-	    });
+        });
 }
 
 function validateFeedCallback(c) {
-	reporting = document.getElementById('validation-report');
+    reporting = document.getElementById('validation-report');
     try {
         result = eval('(' + c.responseText + ')');
     } catch(e) {
-		reporting.className = '';
-		reporting.innerHTML = validate_base;
-		showMsg("Error calling feed validation function", "reblog", "alert");
-		show('reblog'); 
+        reporting.className = '';
+        reporting.innerHTML = validate_base;
+        showMsg("Error calling feed validation function", "reblog", "alert");
+        show('reblog');
         return;
     }
-	if( result.success ) {
-		reporting.className = 'good';
-		reporting.innerHTML = validate_success;
-		if ( result.errstr ) {
-			showMsg(result.errstr, "reblog", "alert");
-		}
-	} else {
-		reporting.className = 'bad';
-		reporting.innerHTML = validate_failure;
-		showMsg(result.errstr, "reblog", "alert");
-		show('reblog'); 
-	}
+    if( result.success ) {
+        reporting.className = 'good';
+        reporting.innerHTML = validate_success;
+        if ( result.errstr ) {
+            showMsg(result.errstr, "reblog", "alert");
+        }
+    } else {
+        reporting.className = 'bad';
+        reporting.innerHTML = validate_failure;
+        showMsg(result.errstr, "reblog", "alert");
+        show('reblog');
+    }
 }
 
 function validateForm() {
-	document.getElementById('url').value = document.getElementById('url').value.replace(/^\s*/, '').replace(/\s*$/, '');
-	document.getElementById('label').value = document.getElementById('label').value.replace(/^\s*/, '').replace(/\s*$/, '');
-	if ( ! document.getElementById('url').value ) {
-		alert('Please enter a URL');
-		return 0;
-	}
-	return 1;
+    document.getElementById('url').value = document.getElementById('url').value.replace(/^\s*/, '').replace(/\s*$/, '');
+    document.getElementById('label').value = document.getElementById('label').value.replace(/^\s*/, '').replace(/\s*$/, '');
+    if ( ! document.getElementById('url').value ) {
+        alert('Please enter a URL');
+        return 0;
+    }
+    return 1;
 }
 
 </script>
@@ -148,11 +148,11 @@ function validateForm() {
 </fieldset>
 
 <fieldset>
-	<mtapp:setting
-	    id="clear_errors"
-	    label="<__trans phrase="Clear Errors">">
-	        <input type="checkbox" name="clear_errors" value="1" id="clear_errors" />
-	</mtapp:setting>
+    <mtapp:setting
+        id="clear_errors"
+        label="<__trans phrase="Clear Errors">">
+            <input type="checkbox" name="clear_errors" value="1" id="clear_errors" />
+    </mtapp:setting>
 </fieldset>
 
 <fieldset>
@@ -163,11 +163,11 @@ function validateForm() {
 </div>
 <div class="field-content">
 <button
-	id="validate_button"
+    id="validate_button"
     type="button"
     title="Validate"
     class="big-button"
-	onclick="validateFeed();"
+    onclick="validateFeed();"
     >Validate</button>
 <p id="msg-block"><span id="validation-report">Validation check has not been run.</span></p>
 </div>
