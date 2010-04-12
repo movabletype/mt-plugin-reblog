@@ -577,6 +577,12 @@ sub _hdlr_reblog_source {
     return $f->{title} ? $f->{title} : '';
 }
 
+sub _hdlr_reblog_label {
+    my $ctx = shift;
+    my $f   = $ctx->stash('reblog_source');
+    return $f->{label} ? $f->{label} : '';
+}
+
 sub _hdlr_reblog_favicon {
     my $ctx  = shift;
     my $args = shift;

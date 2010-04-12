@@ -8,7 +8,7 @@ use MT::Template;
 use MT::Template::Context;
 use MT::Test qw( :cms :db ::data );
 
-use Test::More tests => 75;
+use Test::More tests => 76;
 use Test::Exception;
 
 my $feedurls = [
@@ -72,6 +72,7 @@ my $newfeed = MT->model('ReblogSourcefeed')->new();
 $newfeed->is_active(1);
 $newfeed->blog_id( $blog->id );
 $newfeed->url($feed_base . 'sample_good-1.0.rss');
+$newfeed->label('Awesome feed!');
 $newfeed->save;
 
 my $mt = MT->instance;
@@ -235,6 +236,13 @@ $tmpl->text($test_txt);
 $tmpl->blog_id( $blog->id );
 $tmpl->save;
 is ($tmpl->build($ctx), 'XML.com', '<mt:reblogsourcetitle> yields "XML.com"');
+
+$test_txt = '<mt:reblogsourcefeeds><mt:reblogsourcelabel></mt:reblogsourcefeeds>';
+$tmpl = MT::Template->new();
+$tmpl->text($test_txt);
+$tmpl->blog_id( $blog->id );
+$tmpl->save;
+is ($tmpl->build($ctx), 'Awesome feed!', '<mt:reblogsourcelabel> yields "Awesome feed!"');
 
 $test_txt = '<mt:reblogsourcefeeds><mt:reblogsourcexmllink></mt:reblogsourcefeeds>';
 $tmpl = MT::Template->new();

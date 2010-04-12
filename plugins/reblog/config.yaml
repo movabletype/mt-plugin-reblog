@@ -103,6 +103,7 @@ tags:
         EntryReblogAnnotation: $reblog::Reblog::Tags::_hdlr_entry_reblog_annotation
         ReblogSourceId: $reblog::Reblog::Tags::_hdlr_reblog_source_id
         ReblogSourceTitle: $reblog::Reblog::Tags::_hdlr_reblog_source
+        ReblogSourceLabel: $reblog::Reblog::Tags::_hdlr_reblog_label
         ReblogSource: $reblog::Reblog::Tags::_hdlr_reblog_source
         ReblogSourceXMLLink: $reblog::Reblog::Tags::_hdlr_reblog_source_feed_url
         ReblogSourceFeedURL: $reblog::Reblog::Tags::_hdlr_reblog_source_feed_url
