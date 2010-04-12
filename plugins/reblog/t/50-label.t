@@ -45,4 +45,5 @@ is($rsf->label, '', 'label set to null string (callback blocked by monkeypatch)'
 
 &Reblog::Util::sourcefeed_label_load;
 
+$rsf = MT->model ('ReblogSourcefeed')->load( $rsf->id );
 is($rsf->label, 'narnia.na', 'Post upgrade, label is set to narnia.na (domain of feed)');
