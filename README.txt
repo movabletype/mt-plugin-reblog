@@ -18,4 +18,3 @@ This plugin is licensed under the GPL.
 
 COPYRIGHT
 Copyright © 2007 - 2009, Six Apart Ltd.
-
