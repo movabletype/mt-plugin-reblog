@@ -18,3 +18,4 @@ This plugin is licensed under the GPL.
 
 COPYRIGHT
 Copyright © 2007 - 2009, Six Apart Ltd.
+Enhancements to update frequencies and hierarchical category support, Copyright © 2011, After6 Services LLC.
