@@ -108,6 +108,8 @@ sub config {
         { frequency => 'Hourly',           seconds => 60 * 60 },
         { frequency => 'Every 30 minutes', seconds => 30 * 60 },
         { frequency => 'Every 15 minutes', seconds => 15 * 60 },
+	{ frequency => 'Every 10 minutes', seconds => 10 * 60 },
+	{ frequency => 'Every 5 minutes',  seconds => 5 * 60 }
     ];
     unless ($blog) {
         return $app->error('Blog not found');
