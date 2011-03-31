@@ -72,7 +72,7 @@ sub assign_categories {
     unless ($import_categories) {
         return $res;
     }
-
+    
     my (@cats) = MT::Category->load( { blog_id => $blog->id } );
     my ( $cat, $place );
 
@@ -96,18 +96,25 @@ sub assign_categories {
 
         (@cats) = split( /\:\:/, $sub );
         my $parent = 0;
-        foreach $cat (@cats) {
-            $cat =~ s/\+/ /igs;
-
-            if ( exists( $cat_hash{ lc($cat) } ) ) {
-
-                $cat = $cat_hash{ lc($cat) };
+        
+        foreach my $cat_label (@cats) {
+            $cat_label =~ s/\+/ /igs;
+            
+            my ($existing_category);
+            
+            if ($parent == 0) {
+                $existing_category = MT::Category->load( { blog_id => $blog->id, label => $cat_label } );
+            } else {
+                $existing_category = MT::Category->load( { blog_id => $blog->id, label => $cat_label, parent => $parent->id } );
             }
-            else {
-                $cat = create_category( $cat, $blog, $author, $parent );
+            
+            if ($existing_category) {
+                $cat = $existing_category;
+            } else {
+                $cat = create_category( $cat_label, $blog, $author, $parent );
                 $cat_hash{ lc( $cat->label ) } = $cat;
             }
-
+            
             if ( exists( $place_hash{ $cat->id } ) ) {
 
                 $place = $place_hash{ $cat->id };
@@ -119,7 +126,7 @@ sub assign_categories {
 
             if ( $place->is_primary ) {
                 $primary = $place;
-            }
+            }                      
             $parent = $cat;
             push( @$res, $cat );
         }
@@ -305,6 +312,7 @@ sub import_entries {
         if ( $xp->exists("/rss") ) {
             $type              = "rss";
             $map->{'date'}     = 'pubDate';
+            #$map->{'subjects'} = 'dc:subject';
             $map->{'subjects'} = 'category';
         }
         elsif ( $xp->exists("/rdf:RDF") ) {
