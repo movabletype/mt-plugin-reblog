@@ -197,13 +197,13 @@ sub cms_entry_preview_callback {
 
 sub cms_sourcefeed_presave_callback {
     my ( $cb, $app, $feed, $orig ) = @_;
-    unless ( $app->{query}->{is_active} ) {
+    unless ( $app->param('is_active') ) {
         $feed->is_active(0);
     }
-    unless ( $app->{query}->{is_excerpted} ) {
+    unless ( $app->param('is_excerpted') ) {
         $feed->is_excerpted(0);
     }
-    if ( $app->{query}->{clear_errors} ) {
+    if ( $app->param('clear_errors') ) {
         $feed->has_error(0);
         $feed->consecutive_failures(0);
     }
