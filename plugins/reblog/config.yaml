@@ -1,10 +1,10 @@
 name: Reblog
 id: reblog
 key: reblog
-version: 2.2
+version: 2.3
 schema_version: 2.952
 description: Plugin for automatic syndication with attribution.
-author_name: Six Apart Ltd.; original Reblog by Eyebeam & Stamen
+author_name: Six Apart, Ltd. and After6 Services LLC; original Reblog by Eyebeam & Stamen
 settings:
     restrict_reblog:
         scope: system

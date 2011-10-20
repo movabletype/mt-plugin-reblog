@@ -67,47 +67,73 @@ sub assign_categories {
     my $res    = [];
     my $plugin = MT->component('reblog');
     my $import_categories;
+    
+    # Load the Plugin setting that determines if categories are to be created based on
+    # the metadata in the entries appearing in the feed.
     $import_categories = $plugin->get_config_value( 'import_categories',
         'blog:' . $blog->id );
+    
+    # Exit this subroutine if the configuration doesn't require categories to be created.
     unless ($import_categories) {
         return $res;
     }
     
+    # Load the categories that already exist in this blog into @cats.
     my (@cats) = MT::Category->load( { blog_id => $blog->id } );
     my ( $cat, $place );
 
+    # Create %cat_hash with Category label keys.
     my %cat_hash;
     foreach my $cat (@cats) {
         $cat_hash{ lc( $cat->label ) } = $cat;
     }
 
-    # grab the placement entries from the database for this entry.
+    # Grab the placement entries from the database for this entry.
     my (@placements) = MT::Placement->load( { entry_id => $entry->id } );
 
     my %place_hash;
 
+    # Create %place_hash with Category id keys.
     foreach $place (@placements) {
         $place_hash{ $place->category_id } = $place;
     }
+    
+    # Break the subjects up into individual array elements in @subs.
     my @subs;
     ($subjects) && ( @subs = split( SPLIT_TOKEN, $subjects ) );
+    
+    # Iterate through the subjects in @subs.
     my $primary = 0;
+    
     foreach my $sub (@subs) {
 
+        # Break up this subject into Category labels.
         (@cats) = split( /\:\:/, $sub );
-        my $parent = 0;
         
+        # $parent is set to 0 at this stage because this is either the only category label
+        # or the first category label in a hierarchy that's being processed.
+        
+        # $cat_depth represents the place in the Category label hierarchy we are currently processing.
+        # If $cat_depth == $#cats, then the category belongs in the $place_hash shown below.
+        my $parent = 0;
+        my $cat_depth = 0;
+        
+        # Iterate through the Category labels.
         foreach my $cat_label (@cats) {
             $cat_label =~ s/\+/ /igs;
             
             my ($existing_category);
             
+            # If $parent is not set, attempt to load the Category according to its label.
+            # If $parent is set, attempt to load the Category according to its label as a subcategory of $parent->id.
             if ($parent == 0) {
                 $existing_category = MT::Category->load( { blog_id => $blog->id, label => $cat_label } );
             } else {
                 $existing_category = MT::Category->load( { blog_id => $blog->id, label => $cat_label, parent => $parent->id } );
             }
             
+            # If the Category exists already, assign it to $cat,
+            # otherwise create the category, assign it to $cat, and add it to the $cat_hash.
             if ($existing_category) {
                 $cat = $existing_category;
             } else {
@@ -115,41 +141,60 @@ sub assign_categories {
                 $cat_hash{ lc( $cat->label ) } = $cat;
             }
             
-            if ( exists( $place_hash{ $cat->id } ) ) {
-
-                $place = $place_hash{ $cat->id };
+            # If $cat_depth is equal to the number of elements in @cats, add it to the
+            # $place_hash if it doesn't already exist.
+            #
+            # When $cat_depth == $#cats, this means that the Category was specified in
+            # the subjects and isn't just a parent category that needed to be created because
+            # it didn't exist.
+            if ( $cat_depth == $#cats ) {
+                if ( exists( $place_hash{ $cat->id } ) ) {
+                    $place = $place_hash{ $cat->id };
+                }
+                else {
+                    $place = create_placement( $entry, $cat, 0 );
+                    $place_hash{ $cat->id } = $place;
+                }
+                
+                # If there is no Primary Category yet, set it to this Category.
+                if ( !$primary ) {
+                    $primary = $place;
+                    $primary->is_primary(1);
+                    $primary->save();
+                }
             }
-            else {
-                $place = create_placement( $entry, $cat, 0 );
-                $place_hash{ $cat->id } = $place;
-            }
-
-            if ( $place->is_primary ) {
-                $primary = $place;
-            }                      
+            
+            # Set the current Category to be the parent, add it to @res, and bump $cat_depth.            
             $parent = $cat;
             push( @$res, $cat );
+            $cat_depth++;
         }
     }
 
     my %curr_cats;
 
+    # Iterate through @res, to build %curr_cats.
     foreach $cat (@$res) {
         $curr_cats{ $cat->id } = $cat;
     }
 
+    # Iterate through %place_hash, making sure that each placement exists in $curr_cats.
     foreach $place ( values %place_hash ) {
         if ( !exists( $curr_cats{ $place->category_id } ) ) {
             $place->remove();
         }
     }
 
+    # If the Primary Category isn't designated already, set it to the first Category listed
+    # on the entry in the feed.
     if ( !$primary && scalar(@$res) > 0 ) {
-        $primary = $place_hash{ $res->[0]->id };
+        my @vals = values(%place_hash); 
+        $primary = $place_hash{ $vals[0] };
         $primary->is_primary(1);
         $primary->save();
     }
 
+    # Return the data structure representing the Categories.
     return $res;
 }
 
