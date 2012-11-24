@@ -1,2 +1,0 @@
-"Reblog" is not an official Six Apart release, and as such support from Six Apart for this plugin is not available.
-Although After6 Services LLC has contributed to this plugin, After6 only provides support for this plugin as part of a Movable Type support agreement that references this plugin by name.
