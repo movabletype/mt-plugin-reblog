@@ -9,8 +9,9 @@ Reblog Version 2.3 supports the following versions of Movable Type:
 * Movable Type 4.25 or later
 * Movable Type 5.0x
 * Movable Type 5.1x
+* Movable Type 5.2.x
 
-If you have knowledge of Reblog's compatibility with Movable Type 5.2x, please .
+Note: There is currently a [reported problem with Reblog 2.3 and Movable Type 5](https://github.com/movabletype/mt-plugin-reblog/issues/5) that may be a bug in the Movable Type core.
 
 ## Additional Perl Module Requirements
 
@@ -71,6 +72,6 @@ The Reblog concept was initially developed at [Reblog.org](http://www.reblog.org
 
 Copyright © 2007 - 2012, Six Apart Ltd.  All Rights Reserved.
 
-Enhancements to update frequencies and hierarchical category support, additional documentation, Copyright © 2011-2012, After6 Services LLC.  All Rights Reserved.
+Enhancements to update frequencies and hierarchical category support, additional documentation, Copyright © 2011-2013, After6 Services LLC.  All Rights Reserved.
 
 Additional documentation contained in the Wiki, Copyright © 2011-2012, 601am LLC.  All Rights Reserved.
