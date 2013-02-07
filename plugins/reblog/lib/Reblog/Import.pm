@@ -563,7 +563,7 @@ sub import_entries {
 
           # If we're updating an old reblogged row, we need this entry but
           # can't use MT::Object join for this circumstance, so do it manually
-            my (@rb_data) = Reblog::ReblogData->load( { guid => $guid },
+            my (@rb_data) = Reblog::ReblogData->load( { guid => "$guid" },
                 { sort => 'created_on', direction => 'ascend' } );
             my $rb_data;
             foreach my $rbd (@rb_data) {
