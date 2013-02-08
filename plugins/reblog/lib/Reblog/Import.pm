@@ -729,31 +729,33 @@ sub import_entries {
 
 sub determine_file_type {
     my $url = shift;
-    use Switch;
-    my $type = 'unknown';
-    switch ($url) {
-        case /^.*\.mp3$/i     { $type = 'audio/mpeg'; }
-        case /^.*\.m4a$/i     { $type = 'audio/mp4'; }
-        case /^.*\.wma$/i     { $type = 'audio/wma'; }
-        case /^.*\.midi$/i    { $type = 'audio/midi'; }
-        case /^.*\.aa$/i      { $type = 'audio/aa'; }
-        case /^.*\.wav$/i     { $type = 'audio/wav'; }
-        case /^.*\.ogg$/i     { $type = 'application/ogg'; }
-        case /^.*\.torrent$/i { $type = 'application/x-bittorrent'; }
-        case /^.*\.exe$/i     { $type = 'application/octet-stream'; }
-        case /^.*\.bmp$/i     { $type = 'image/bmp'; }
-        case /^.*\.jpe?g$/i   { $type = 'image/jpeg'; }
-        case /^.*\.gif$/i     { $type = 'image/gif'; }
-        case /^.*\.tiff?$/i   { $type = 'image/tiff'; }
-        case /^.*\.png$/i     { $type = 'image/png'; }
-        case /^.*\.mp4/i      { $type = 'video/mp4'; }
-        case /^.*\.mp4v/i     { $type = 'video/mp4'; }
-        case /^.*\.mpeg$/i    { $type = 'video/mpeg'; }
-        case /^.*\.avi$/i     { $type = 'video/msvideo'; }
-        case /^.*\.mov$/i     { $type = 'video/quicktime'; }
-        case /^.*\.wmv$/i     { $type = 'video/x-ms-wmv'; }
-    }
-    return $type;
+    my ($ext) = $url =~ m/\.(\w+)$/;
+    $ext = lc $ext;
+    my %listing = (
+        mp3 => 'audio/mpeg',
+        m4a => 'audio/mp4',
+        wma => 'audio/wma',
+        midi => 'audio/midi',
+        aa => 'audio/aa',
+        wav => 'audio/wav',
+        ogg => 'application/ogg',
+        torrent => 'application/x-bittorrent',
+        exe => 'application/octet-stream',
+        bmp => 'image/bmp',
+        jpg => 'image/jpeg',
+        jpeg => 'image/jpeg',
+        gif => 'image/gif',
+        tiff => 'image/tiff',
+        tif => 'image/tiff',
+        png => 'image/png',
+        mp4 => 'video/mp4',
+        mp4v => 'video/mp4',
+        mpeg => 'video/mpeg',
+        avi => 'video/msvideo',
+        mov => 'video/quicktime',
+        wmv => 'video/x-ms-wmv',
+    );
+    return $listing{$ext} || 'unknown';
 }
 
 sub _clean_html {
