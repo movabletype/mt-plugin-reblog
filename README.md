@@ -62,7 +62,7 @@ This plugin is [version 2 of the GNU General Public License](http://opensource.o
 
 # Authorship
 
-This plugin has been contributed to by many current and former employees of Six Apart, Ltd., After6 Services, 601am, Endevver, and YesItCan.be.  See the [Credits page](https://github.com/movabletype/mt-plugin-reblog/wiki/Credits) on the Reblog wiki for a list of specific individuals who have contributed.
+This plugin has been contributed to by many current and former employees of Six Apart, Ltd., After6 Services, 601am, Endevver, and YesItCan.be.  See the [Credits page](https://github.com/movabletype/mt-plugin-reblog/wiki/License,-Copyright,-and-Credits) on the Reblog wiki for a list of specific individuals who have contributed.
 
 The Reblog concept was initially developed at [Reblog.org](http://www.reblog.org/) by the [Eyebeam Art and Technology Center](http://www.eyebeam.org/), [Stamen Design](http://stamen.com/), and other contributors. 
 
