@@ -4,14 +4,12 @@ Reblog is a Movable Type plugin that parses Atom and RSS feeds and transforms fe
 
 # Dependencies
 
-Reblog Version 2.3 supports the following versions of Movable Type:
+Reblog Version 2.4 supports the following versions of Movable Type:
 
 * Movable Type 4.25 or later
 * Movable Type 5.0x
 * Movable Type 5.1x
 * Movable Type 5.2.x
-
-Note: There is currently a [reported problem with Reblog 2.3 and Movable Type 5](https://github.com/movabletype/mt-plugin-reblog/issues/5) that may be a bug in the Movable Type core.
 
 ## Additional Perl Module Requirements
 
@@ -19,7 +17,7 @@ In addition to the [System Requirements](http://www.movabletype.org/documentatio
 
 * [DateTime](http://search.cpan.org/~drolsky/DateTime-0.78/lib/DateTime.pm)
 * [Date::Parse](http://search.cpan.org/~gbarr/TimeDate-1.20/lib/Date/Parse.pm)
-* [Switch](http://search.cpan.org/~rgarcia/Switch-2.16/Switch.pm)
+* [Switch](http://search.cpan.org/~rgarcia/Switch-2.16/Switch.pm) is no longer required in version 2.4 and later.
 
 ## Optional Perl Modules
 
@@ -70,7 +68,7 @@ The Reblog concept was initially developed at [Reblog.org](http://www.reblog.org
 
 # Copyright
 
-Copyright © 2007 - 2012, Six Apart Ltd.  All Rights Reserved.
+Copyright © 2007 - 2013, Six Apart Ltd.  All Rights Reserved.
 
 Enhancements to update frequencies and hierarchical category support, additional documentation, Copyright © 2011-2013, After6 Services LLC.  All Rights Reserved.
 
