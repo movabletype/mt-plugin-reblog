@@ -58,7 +58,7 @@ Additional documentation is located at [https://github.com/movabletype/mt-plugin
 
 # License
 
-This plugin is [version 2 of the GNU General Public License](http://opensource.org/licenses/GPL-2.0).   See LICENSE.md for the exact license.
+This plugin is [MIT](http://opensource.org/licenses/MIT) licensed.  See LICENSE.md for the exact license.
 
 # Authorship
 
