@@ -60,13 +60,13 @@ task_workers:
 upgrade_functions:
     reblog_sourcefeed_label_load:
         version_limit: 2.952
-        code: $reblog::Reblog::Util::sourcefeed_label_load
+        code: $reblog::Reblog::Upgrade::sourcefeed_label_load
     reblog_data_sourcefeedid_load:
         version_limit: 2.92
-        code: $reblog::Reblog::Util::data_sourcefeedid_load
+        code: $reblog::Reblog::Upgrade::data_sourcefeedid_load
     reblog_initialsourcefeed_load:
         version_limit: 2.7
-        code: $reblog::Reblog::Util::initial_sourcefeed_load
+        code: $reblog::Reblog::Upgrade::initial_sourcefeed_load
 
 applications:
     cms:
