@@ -16,6 +16,8 @@ package Reblog::CMS;
 use strict;
 use warnings;
 
+# This is the blog-level Reblog configurations settings, available at
+# Manage > Reblog.
 sub config {
     my $app   = shift;
     my $perms = $app->permissions;
@@ -94,8 +96,8 @@ sub config {
     while ( my $a = $author_iter->() ) {
         next unless ( $a->permissions($blog)->has('publish_post') );
         my $row;
-		my $shown = $a->name;
-		if ( $a->nickname ) { $shown .= ' (' . $a->nickname . ')'; }
+        my $shown = $a->name;
+        if ( $a->nickname ) { $shown .= ' (' . $a->nickname . ')'; }
         $row->{author_name} = $shown;
         $row->{author_id}   = $a->id;
         push @author_loop, $row;
@@ -109,8 +111,8 @@ sub config {
         { frequency => 'Hourly',           seconds => 60 * 60 },
         { frequency => 'Every 30 minutes', seconds => 30 * 60 },
         { frequency => 'Every 15 minutes', seconds => 15 * 60 },
-	{ frequency => 'Every 10 minutes', seconds => 10 * 60 },
-	{ frequency => 'Every 5 minutes',  seconds => 5 * 60 }
+    { frequency => 'Every 10 minutes', seconds => 10 * 60 },
+    { frequency => 'Every 5 minutes',  seconds => 5 * 60 }
     ];
     unless ($blog) {
         return $app->error('Blog not found');
@@ -135,6 +137,9 @@ sub config {
     $app->build_page( $tmpl, $param );
 }
 
+# On the Manage Sourcefeeds screen is an Import list action/button that will
+# allow admins to import the selected sourcefeeds, creating entries,
+# republishing, etc.
 sub import_sourcefeeds {
     my $app = shift;
     $app->validate_magic() or return;
@@ -173,6 +178,7 @@ sub import_sourcefeeds {
     $app->build_page( $tmpl, $param );
 }
 
+# Save the sourcefeed, from the Edit Sourcefeed screen.
 sub save_sourcefeed {
     my $app   = shift;
     my $perms = $app->permissions;
@@ -210,6 +216,7 @@ sub cms_sourcefeed_presave_callback {
     return 1;
 }
 
+# The sourcefeed list view, availabe at Manage > Sourcefeeds.
 sub list_sourcefeeds {
     use Reblog::ReblogSourcefeed;
     my ($app) = @_;
@@ -235,6 +242,10 @@ sub list_sourcefeeds {
     );
 }
 
+# When on the Edit Sourcefeed screen, there's a "Validate" button to validate
+# the URL entered, to help ensure Reblog will work. Clicking that Validate
+# button calls this method, which returns an AJAX response to be displayed
+# inline.
 sub validate_json {
     use Reblog::Util;
     use JSON;
@@ -288,6 +299,7 @@ sub validate_json {
     1;
 }
 
+# The Edit Sourcefeed screen.
 sub edit_sourcefeed {
     my $app   = shift;
     my $perms = $app->permissions;
@@ -331,6 +343,7 @@ sub edit_sourcefeed {
     $app->build_page( $tmpl, \%param );
 }
 
+# Called by CMSPostSave.entry
 sub reblog_save {
     my ( $cb, $app, $obj ) = @_;
     my $plugin = MT->component('reblog');
@@ -410,6 +423,8 @@ sub reblog_save {
     }
 }
 
+# The Manage Reblog configuration screen (at Manage > Reblog) saves it's values
+# to the blog-level plugindata object, just like plugin Settings.
 sub save_config {    # Translate default author's author_name into author id
     my $plugin = shift;
     my ( $param, $scope ) = @_;
@@ -489,6 +504,8 @@ sub inline_edit_entry {
     $tmpl->insertAfter( $reblog_setting, $keywords_field );
 }
 
+# On each screen in Reblog, permissions are check to see if the user has
+# adequate permission to do what they're trying to do.
 sub check_perms {
     my ( $perms, $author, $type ) = @_;
     my $plugin = MT->component('reblog');
@@ -511,6 +528,8 @@ sub check_perms {
     }
 }
 
+# The menu condition to check if the user in context has adequate permission to
+# view the Manage > Reblog menu item.
 sub menu_permission_reblog {
     my $app = MT->instance;
     unless ($app) {
@@ -532,6 +551,8 @@ sub menu_permission_reblog {
     }
 }
 
+# The menu condition to check if the user in context has adequate permission to
+# view the Manage > Sourcefeeds menu item.
 sub menu_permission_sourcefeeds {
     my $app = MT->instance;
     unless ($app) {
