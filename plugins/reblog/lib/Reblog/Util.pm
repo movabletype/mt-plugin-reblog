@@ -99,19 +99,19 @@ sub loadreblogparams {
     $param->{'via-link'}   = $app->param('via-link')   || $reblog->via_link;
     $param->{'annotation'} = $app->param('annotation') || $reblog->annotation;
     $param->{'source-title'} = $app->param('source-title')
-        || $reblog->source_title;
+        || $reblog->src_title;
     $param->{'source-link'} = $app->param('source-link')
-        || $reblog->source_url;
+        || $reblog->src_url;
     $param->{'thumbnail-url'} = $app->param('thumbnail-url')
         || $reblog->thumbnail_url;
     $param->{'thumbnail-link'} = $app->param('thumbnail-link')
         || $reblog->thumbnail_link;
     $param->{'enclosure_url'} = $app->param('enclosure_url')
-        || $reblog->enclosure_url;
+        || $reblog->encl_url;
     $param->{'enclosure_length'} = $app->param('enclosure_length')
-        || $reblog->enclosure_length;
+        || $reblog->encl_length;
     $param->{'enclosure_type'} = $app->param('enclosure_type')
-        || $reblog->enclosure_type;
+        || $reblog->encl_type;
 
 }
 
@@ -162,15 +162,15 @@ sub reblog_save {
     $reblog = Reblog::ReblogData->load( { entry_id => $obj->id } );
 
     if ($reblog) {
-        $reblog->via_link($via_link);
-        $reblog->source_url($source_link);
-        $reblog->source_title($source_title);
-        $reblog->thumbnail_link($thumbnail_link);
-        $reblog->thumbnail_url($thumbnail_url);
-        $reblog->enclosure_url($enclosure_url);
-        $reblog->enclosure_type($enclosure_type);
-        $reblog->enclosure_length($enclosure_length);
-        $reblog->annotation($annotation);
+        $reblog->via_link(       $via_link         );
+        $reblog->src_url(        $source_link      );
+        $reblog->src_title(      $source_title     );
+        $reblog->thumbnail_link( $thumbnail_link   );
+        $reblog->thumbnail_url(  $thumbnail_url    );
+        $reblog->encl_url(       $enclosure_url    );
+        $reblog->encl_type(      $enclosure_type   );
+        $reblog->encl_length(    $enclosure_length );
+        $reblog->annotation(     $annotation       );
 
         $reblog->save;
     }
@@ -185,30 +185,28 @@ sub reblog_save {
         if ($via_link) {
             $rbd->via_link($via_link);
         }
-        $rbd->source_url($source_link);
+        $rbd->src_url($source_link);
         if ($source_title) {
-            $rbd->source_title($source_title);
+            $rbd->src_title($source_title);
         }
         else {
-            $rbd->source_title( $entry->title );
+            $rbd->src_title( $entry->title );
         }
-        $rbd->thumbnail_link($thumbnail_link);
-        $rbd->thumbnail_url($thumbnail_url);
-        $rbd->enclosure_url($enclosure_url);
-        $rbd->enclosure_length($enclosure_length);
-        $rbd->enclosure_type($enclosure_type);
-
-        $rbd->entry_id( $obj->id );
-        $rbd->orig_created_on( $entry->created_on );
-        $rbd->created_on( $entry->created_on );
-
-        $rbd->source_author( $user->nickname );
-        $rbd->link($source_link);
-        $rbd->guid( $entry->atom_id );
-        $rbd->source($source_title);
-        $rbd->source_feed_url('#');
-        $rbd->sourcefeed_id(0);
-        $rbd->blog_id( $obj->blog_id );
+        $rbd->thumbnail_link( $thumbnail_link    );
+        $rbd->thumbnail_url(  $thumbnail_url     );
+        $rbd->encl_url(       $enclosure_url     );
+        $rbd->encl_length(    $enclosure_length  );
+        $rbd->encl_type(      $enclosure_type    );
+        $rbd->entry_id(       $obj->id           );
+        $rbd->src_created_on( $entry->created_on );
+        $rbd->created_on(     $entry->created_on );
+        $rbd->src_author(     $user->nickname    );
+        $rbd->link(           $source_link       );
+        $rbd->guid(           $entry->atom_id    );
+        $rbd->src(            $source_title      );
+        $rbd->src_feed_url(   '#'                );
+        $rbd->sourcefeed_id(  0                  );
+        $rbd->blog_id(        $obj->blog_id      );
         $rbd->save;
     }
 }
@@ -541,8 +539,8 @@ sub do_import {
         }
         $feedcount++;
         $sourcefeed->has_error(0);
-        $sourcefeed->consecutive_failures(0);
-        $sourcefeed->epoch_last_read( time() );
+        $sourcefeed->consec_fails(0);
+        $sourcefeed->last_read( time() );
         $sourcefeed->save;
         foreach my $eRec (@entries) {
             if ( $eRec->{status} ne 'old' ) {

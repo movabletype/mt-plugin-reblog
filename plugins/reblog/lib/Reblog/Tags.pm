@@ -78,7 +78,7 @@ sub _hdlr_entry_if_has_reblog_author {
     require Reblog::ReblogData;
     my $rbd = Reblog::ReblogData->load( { entry_id => $entry->id } )
         or return '';
-    return defined($rbd) && $rbd && $rbd->source_author;
+    return defined($rbd) && $rbd && $rbd->src_author;
 }
 
 # EntryReblogSource function tag
@@ -91,7 +91,7 @@ sub _hdlr_entry_reblog_source {
     require Reblog::ReblogData;
     my $rbd = Reblog::ReblogData->load( { entry_id => $entry->id } )
         or return '';
-    defined($rbd) && $rbd && $rbd->source ? $rbd->source : '';
+    defined($rbd) && $rbd && $rbd->src ? $rbd->src : '';
 }
 
 # EntryReblogSourceURL and EntryReblogSourceLink function tags
@@ -104,7 +104,7 @@ sub _hdlr_entry_reblog_source_url {
     require Reblog::ReblogData;
     my $rbd = Reblog::ReblogData->load( { entry_id => $entry->id } )
         or return '';
-    defined($rbd) && $rbd && $rbd->source_url ? $rbd->source_url : '';
+    defined($rbd) && $rbd && $rbd->src_url ? $rbd->src_url : '';
 }
 
 # EntryReblogSourceFeedURL and EntryReblogSourceLinkXML function tags
@@ -119,7 +119,7 @@ sub _hdlr_entry_reblog_source_feed_url {
         or return '';
     defined($rbd)
         && $rbd
-        && $rbd->source_feed_url ? $rbd->source_feed_url : '';
+        && $rbd->src_feed_url ? $rbd->src_feed_url : '';
 }
 
 # EntryReblogLink function tag
@@ -176,10 +176,10 @@ sub _hdlr_entry_reblog_orig_date {
     eval {
         $args->{ts}
             = (
-            $rbd ? MT::Object->driver()->db2ts( $rbd->orig_created_on ) : 0 );
+            $rbd ? MT::Object->driver()->db2ts( $rbd->src_created_on ) : 0 );
     };
     if ($@) {
-        $args->{ts} = $rbd->orig_created_on;
+        $args->{ts} = $rbd->src_created_on;
     }
 
     defined($rbd) && $rbd
@@ -197,7 +197,7 @@ sub _hdlr_entry_reblog_source_author {
     require Reblog::ReblogData;
     my $rbd = Reblog::ReblogData->load( { entry_id => $entry->id } )
         or return '';
-    defined($rbd) && $rbd ? $rbd->source_author : '';
+    defined($rbd) && $rbd ? $rbd->src_author : '';
 }
 
 # EntryReblogIdentifier function tag
@@ -242,8 +242,8 @@ sub _hdlr_entry_reblog_orig_source_title {
     my $args   = shift;
     my $e      = $ctx->stash('entry') or return;
     my $reblog = Reblog::ReblogData->load( { entry_id => $e->id } );
-    ( $reblog && $reblog->source_title )
-        ? return $reblog->source_title
+    ( $reblog && $reblog->src_title )
+        ? return $reblog->src_title
         : return '';
 }
 
@@ -278,8 +278,8 @@ sub _hdlr_entry_reblog_enclosure {
     my $e      = $ctx->stash('entry') or return;
     my $reblog = Reblog::ReblogData->load( { entry_id => $e->id } );
 
-    if ( $reblog && $reblog->enclosure_url ) {
-        return $reblog->enclosure_url;
+    if ( $reblog && $reblog->encl_url ) {
+        return $reblog->encl_url;
     }
     else {
         return '';
@@ -293,8 +293,8 @@ sub _hdlr_entry_reblog_enclosure_mimetype {
     my $e      = $ctx->stash('entry') or return;
     my $reblog = Reblog::ReblogData->load( { entry_id => $e->id } );
 
-    if ( $reblog && $reblog->enclosure_url ) {
-        return $reblog->enclosure_type;
+    if ( $reblog && $reblog->encl_url ) {
+        return $reblog->encl_type;
     }
     else {
         return '';
@@ -308,22 +308,22 @@ sub _hdlr_entry_reblog_enclosure_length {
     my $e      = $ctx->stash('entry') or return;
     my $reblog = Reblog::ReblogData->load( { entry_id => $e->id } );
 
-    if ( $reblog && $reblog->enclosure_length ) {
-        return $reblog->enclosure_length;
+    if ( $reblog && $reblog->encl_length ) {
+        return $reblog->encl_length;
     }
     elsif ($reblog) {
         require LWP::UserAgent;
         my $ua      = LWP::UserAgent->new();
-        my $headers = $ua->head( $reblog->enclosure_url );
+        my $headers = $ua->head( $reblog->encl_url );
         if ( $headers && $headers->content_length ) {
-            $reblog->enclosure_length( $headers->content_length );
+            $reblog->encl_length( $headers->content_length );
         }
         else {
-            $reblog->enclosure_length(-1)
+            $reblog->encl_length(-1)
                 ;  # set it to a nonzero value so we don't try to get it again
         }
         $reblog->save;
-        return $reblog->enclosure_length;
+        return $reblog->encl_length;
     }
     else {
         return '';
@@ -345,7 +345,7 @@ sub _hdlr_reblog_enclosure_entries {
 
     @entries = grep {
         my $rdb = Reblog::ReblogData->load( { entry_id => $_->id } );
-        $rdb->enclosure_url;
+        $rdb->encl_url;
     } @entries;
 
     return '' if ( !scalar @entries );
@@ -375,7 +375,7 @@ sub _hdlr_reblog_entries {
     $offset = $args->{offset} ? $args->{offset} : 0;
 
     my %query_args;
-    $query_args{'sort'}      = 'orig_created_on';
+    $query_args{'sort'}      = 'src_created_on';
     $query_args{'direction'} = 'descend';
     $query_args{'offset'}    = $offset;
 
@@ -498,8 +498,8 @@ sub _hdlr_reblog_sourcefeeds {
             = Reblog::ReblogData->load( { sourcefeed_id => $sourcefeed->id },
             { limit => 1 } );
         if ($last) {
-            $title = $last->source;
-            $url   = $last->source_url;
+            $title = $last->src;
+            $url   = $last->src_url;
         }
         push @sources,
             {
@@ -547,7 +547,7 @@ sub _hdlr_reblog_sourcefeeds {
                     return -1 if ( !defined $b->[1] );
                     $a->[1] <=> $b->[1]
                     }
-                    map { [ $_, $_->{sourcefeed}->epoch_last_read ] } @slice;
+                    map { [ $_, $_->{sourcefeed}->last_read ] } @slice;
             }
         }
     }

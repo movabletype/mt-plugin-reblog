@@ -19,29 +19,34 @@ use base qw( MT::Object );
 
 @Reblog::ReblogData::ISA = qw( MT::Object );
 __PACKAGE__->install_properties(
-    {   column_defs => {
-            'id'               => 'integer not null auto_increment',
-            'entry_id'         => 'integer not null',
-            'sourcefeed_id'    => 'integer not null',
-            'blog_id'          => 'integer not null',
-            'link'             => 'string(255)',
-            'guid'             => 'string(255)',
-            'source_author'    => 'string(255)',
-            'via_link'         => 'string(255)',
-            'orig_created_on'  => 'datetime not null',
-            'source'           => 'string(255)',
-            'source_url'       => 'string(255)',
-            'source_feed_url'  => 'string(255)',
-            'source_title'     => 'string(255)',
-            'thumbnail_url'    => 'string(255)',
-            'thumbnail_link'   => 'string(255)',
-            'enclosure_url'    => 'string(255)',
-            'enclosure_length' => 'string(255)',
-            'enclosure_type'   => 'string(255)',
-            'annotation'       => 'text'
+    {
+        column_defs => {
+            'id'             => 'integer not null auto_increment',
+            'entry_id'       => 'integer not null',
+            'sourcefeed_id'  => 'integer not null',
+            'blog_id'        => 'integer not null',
+            'link'           => 'string(255)',
+            'guid'           => 'string(255)',
+            'via_link'       => 'string(255)',
+            'src'            => 'string(255)',
+            'src_author'     => 'string(255)',
+            'src_created_on' => 'datetime not null',
+            'src_feed_url'   => 'string(255)',
+            'src_url'        => 'string(255)',
+            'src_title'      => 'string(255)',
+            'thumbnail_url'  => 'string(255)',
+            'thumbnail_link' => 'string(255)',
+            'encl_length'    => 'string(255)',
+            'encl_type'      => 'string(255)',
+            'encl_url'       => 'string(255)',
+            'annotation'     => 'text',
         },
-        indexes =>
-            { created_on => 1, sourcefeed_id => 1, entry_id => 1, guid => 1 },
+        indexes => {
+            created_on    => 1, # Added by the audit flag
+            sourcefeed_id => 1,
+            entry_id      => 1,
+            guid          => 1,
+        },
         audit       => 1,
         datasource  => 'reblog_data',
         primary_key => 'id',

@@ -91,14 +91,14 @@ $rbdata->guid('GUID');
 $rbdata->thumbnail_link('http://example.com/landing/');
 $rbdata->thumbnail_url('http://example.com/wombat.png');
 $rbdata->annotation('Really good! --Steve');
-$rbdata->enclosure_url('http://example.com/otter.png');
-$rbdata->enclosure_length(123456);
-$rbdata->enclosure_type('image/png');
+$rbdata->encl_url('http://example.com/otter.png');
+$rbdata->encl_length(123456);
+$rbdata->encl_type('image/png');
 $rbdata->save;
 
 my $rbd2 = Reblog::ReblogData->load({ entry_id => 3 });
 $rbd2->created_on('20090201120100');
-$rbd2->enclosure_url('http://example.com/something/');
+$rbd2->encl_url('http://example.com/something/');
 $rbd2->save;
 
 my $nonrb = MT::Entry->new();
@@ -357,7 +357,7 @@ $tmpl->blog_id( $blog->id );
 $tmpl->save;
 is ($tmpl->build($ctx), 'Normalizing XML, Part 2', '<mt:EntryIfHasReblogAuthor> returns positive appropriately, passes MT::Entry');
 
-$rbdata->source_author('');
+$rbdata->src_author('');
 $rbdata->save;
 $test_txt = '<mt:EntryIfHasReblogAuthor><$mt:EntryTitle$><mt:else>No</mt:EntryIfHasReblogAuthor>';
 $tmpl = MT::Template->new();

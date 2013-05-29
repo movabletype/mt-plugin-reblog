@@ -211,7 +211,7 @@ sub cms_sourcefeed_presave_callback {
     }
     if ( $app->param('clear_errors') ) {
         $feed->has_error(0);
-        $feed->consecutive_failures(0);
+        $feed->consec_fails(0);
     }
     return 1;
 }
@@ -372,15 +372,15 @@ sub reblog_save {
     my $reblog = Reblog::ReblogData->load( { entry_id => $obj->id } );
 
     if ($reblog) {
-        $reblog->via_link($via_link);
-        $reblog->source_url($source_link);
-        $reblog->source_title($source_title);
-        $reblog->thumbnail_link($thumbnail_link);
-        $reblog->thumbnail_url($thumbnail_url);
-        $reblog->enclosure_url($enclosure_url);
-        $reblog->enclosure_type($enclosure_type);
-        $reblog->enclosure_length($enclosure_length);
-        $reblog->annotation($annotation);
+        $reblog->via_link(       $via_link         );
+        $reblog->src_url(        $source_link      );
+        $reblog->src_title(      $source_title     );
+        $reblog->thumbnail_link( $thumbnail_link   );
+        $reblog->thumbnail_url(  $thumbnail_url    );
+        $reblog->encl_url(       $enclosure_url    );
+        $reblog->encl_type(      $enclosure_type   );
+        $reblog->encl_length(    $enclosure_length );
+        $reblog->annotation(     $annotation       );
 
         $reblog->save;
     }
@@ -395,30 +395,30 @@ sub reblog_save {
         if ($via_link) {
             $rbd->via_link($via_link);
         }
-        $rbd->source_url($source_link);
+        $rbd->src_url($source_link);
         if ($source_title) {
-            $rbd->source_title($source_title);
+            $rbd->src_title($source_title);
         }
         else {
-            $rbd->source_title( $entry->title );
+            $rbd->src_title( $entry->title );
         }
-        $rbd->thumbnail_link($thumbnail_link);
-        $rbd->thumbnail_url($thumbnail_url);
-        $rbd->enclosure_url($enclosure_url);
-        $rbd->enclosure_length($enclosure_length);
-        $rbd->enclosure_type($enclosure_type);
-        $rbd->entry_id( $obj->id );
-        $rbd->orig_created_on( $entry->created_on );
-        $rbd->created_on( $entry->created_on );
+        $rbd->thumbnail_link( $thumbnail_link    );
+        $rbd->thumbnail_url(  $thumbnail_url     );
+        $rbd->encl_url(       $enclosure_url     );
+        $rbd->encl_length(    $enclosure_length  );
+        $rbd->encl_type(      $enclosure_type    );
+        $rbd->entry_id(       $obj->id           );
+        $rbd->src_created_on( $entry->created_on );
+        $rbd->created_on(     $entry->created_on );
 
         # TODO - not obviously exposed in app
-        $rbd->source_author( $user->nickname );
-        $rbd->link($source_link);
-        $rbd->guid( $entry->atom_id );
-        $rbd->source($source_title);
-        $rbd->source_feed_url('#');
-        $rbd->sourcefeed_id(0);
-        $rbd->blog_id($blogid);
+        $rbd->src_author(    $user->nickname );
+        $rbd->link(          $source_link    );
+        $rbd->guid(          $entry->atom_id );
+        $rbd->src(           $source_title   );
+        $rbd->src_feed_url(  '#'             );
+        $rbd->sourcefeed_id( 0               );
+        $rbd->blog_id(       $blogid         );
         $rbd->save;
     }
 }
@@ -492,12 +492,12 @@ sub inline_edit_entry {
     }
     else {
         $addition->param( ANNOTATION     => $reblog_data->annotation );
-        $addition->param( SOURCE_TITLE   => $reblog_data->source_title );
-        $addition->param( SOURCE_LINK    => $reblog_data->source_url );
+        $addition->param( SOURCE_TITLE   => $reblog_data->src_title );
+        $addition->param( SOURCE_LINK    => $reblog_data->src_url );
         $addition->param( VIA_LINK       => $reblog_data->via_link );
         $addition->param( THUMBNAIL_LINK => $reblog_data->thumbnail_link );
         $addition->param( THUMBNAIL_URL  => $reblog_data->thumbnail_url );
-        $addition->param( ENCLOSURE_URL  => $reblog_data->enclosure_url );
+        $addition->param( ENCLOSURE_URL  => $reblog_data->encl_url );
     }
     $reblog_setting->innerHTML( $addition->output );
     my $keywords_field = $tmpl->getElementById('keywords');

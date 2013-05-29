@@ -23,7 +23,7 @@ $rsf->save;
 
 is ($rsf->blog_id, 1, "SourceFeed blog ID");
 is ($rsf->url, 'http://narnia.na/atom.xml', "SourceFeed URL");
-ok (! $rsf->consecutive_failures, "SourceFeed has no failures");
+ok (! $rsf->consec_fails, "SourceFeed has no failures");
 is ($rsf->label, 'Narnia Feed', "SourceFeed Label");
 is ($rsf->has_error, 0, "SourceFeed has no errors");
 is ($rsf->is_active, 1, "SourceFeed is active");

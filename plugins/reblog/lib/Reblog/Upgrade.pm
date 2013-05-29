@@ -36,7 +36,7 @@ sub data_sourcefeedid_load {
         }
         my @sourcefeeds
             = Reblog::ReblogSourcefeed->load(
-            { blog_id => $entry->blog_id, url => $rbd->source_feed_url },
+            { blog_id => $entry->blog_id, url => $rbd->src_feed_url },
             { limit   => 1 } );
         my $sourcefeed = pop @sourcefeeds;
         if ($sourcefeed) {

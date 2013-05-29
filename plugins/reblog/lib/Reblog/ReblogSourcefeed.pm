@@ -22,26 +22,29 @@ use constant URL_SIZE                => 255;
 
 @Reblog::ReblogSourcefeed::ISA = qw( MT::Object );
 __PACKAGE__->install_properties(
-    {   column_defs => {
-            'id'                   => 'integer not null auto_increment',
-            'blog_id'              => 'integer not null',
-            'label'                => 'string(255)',
-            'url'                  => 'string(' . URL_SIZE . ') not null',
-            'is_active'            => 'boolean not null',
-            'is_excerpted'         => 'boolean not null',
-            'category_id'          => 'integer',
-            'epoch_last_read'      => 'integer',
-            'epoch_last_fired'     => 'integer',
-            'total_failures'       => 'integer',
-            'consecutive_failures' => 'integer',
-            'has_error'            => 'boolean not null',
+    {
+        column_defs => {
+            'id'           => 'integer not null auto_increment',
+            'blog_id'      => 'integer not null',
+            'label'        => 'string(255)',
+            'url'          => 'string(' . URL_SIZE . ') not null',
+            'is_active'    => 'boolean not null',
+            'is_excerpted' => 'boolean not null',
+            'category_id'  => 'integer',
+            'last_read'    => 'integer',
+            # Does this column actually do anything? It's only used in the
+            # inject_worker function below.
+            'last_fired'   => 'integer',
+            'total_fails'  => 'integer',
+            'consec_fails' => 'integer',
+            'has_error'    => 'boolean not null',
         },
         indexes => {
             blog_id => 1,
             url     => 1,
         },
         audit       => 1,
-        datasource  => 'reblog_sourcefeed',
+        datasource  => 'reblog_srcfeed',
         primary_key => 'id',
     }
 );
@@ -59,8 +62,8 @@ sub set_defaults {
     $obj->has_error(0);
     $obj->is_active(1);
     $obj->is_excerpted(0);
-    $obj->total_failures(0);
-    $obj->consecutive_failures(0);
+    $obj->total_fails(0);
+    $obj->consec_fails(0);
 }
 
 sub inject_worker {
@@ -69,7 +72,7 @@ sub inject_worker {
     require MT::TheSchwartz;
     require TheSchwartz::Job;
     require Reblog::Util;
-    $self->epoch_last_fired( time() );
+    $self->last_fired( time() );
     $self->save;
     my $blog_id = $self->blog_id;
     my $plugin  = MT->component('reblog');
@@ -77,7 +80,7 @@ sub inject_worker {
         = $plugin->get_config_value( 'frequency', 'blog:' . $blog_id );
     $frequency ||= Reblog::Util::DEFAULT_FREQUENCY();
     my $current_epoch;
-    $current_epoch = $self->epoch_last_fired;
+    $current_epoch = $self->last_fired;
     $current_epoch ||= time();
     my $next_epoch = $current_epoch + ($frequency);
 
@@ -109,13 +112,13 @@ sub increment_error {
     $error ||= 'Unknown error';
     my $plugin         = MT->component('reblog');
     my $log            = Reblog::Log::ReblogSourcefeed->new;
-    my $total_failures = $self->total_failures;
+    my $total_failures = $self->total_fails;
     $total_failures ||= 0;
-    $self->total_failures( $total_failures + 1 );
-    my $consecutive_failures = $self->consecutive_failures;
+    $self->total_fails( $total_failures + 1 );
+    my $consecutive_failures = $self->consec_fails;
     $consecutive_failures ||= 0;
     $consecutive_failures++;
-    $self->consecutive_failures($consecutive_failures);
+    $self->consec_fails($consecutive_failures);
     my $max = $plugin->get_config_value( 'max_failures',
         'blog:' . $self->blog_id );
 

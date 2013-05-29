@@ -583,20 +583,19 @@ sub import_entries {
             }
 
             $rb_data->sourcefeed_id( $sourcefeed->id );
-            $rb_data->blog_id( $sourcefeed->blog_id );
-            $rb_data->link($link);
-            $rb_data->guid($guid);
-            $rb_data->via_link($via_link);
-            $rb_data->orig_created_on($orig_date);
-            $rb_data->source_author($source_author);
-            $rb_data->source($source_name);
-            $rb_data->source_url($source_url);
-            $rb_data->source_feed_url($source_rss);
-            $rb_data->source_title($source_title);
-
-            $rb_data->enclosure_url($enclosure_url);
-            $rb_data->enclosure_length($enclosure_length);
-            $rb_data->enclosure_type($enclosure_type);
+            $rb_data->blog_id( $sourcefeed->blog_id  );
+            $rb_data->link(           $link          );
+            $rb_data->guid(           $guid          );
+            $rb_data->via_link(       $via_link      );
+            $rb_data->src_created_on( $orig_date     );
+            $rb_data->src_author(     $source_author );
+            $rb_data->src(            $source_name   );
+            $rb_data->src_url(        $source_url    );
+            $rb_data->src_feed_url(   $source_rss    );
+            $rb_data->src_title(      $source_title  );
+            $rb_data->encl_url(    $enclosure_url    );
+            $rb_data->encl_length( $enclosure_length );
+            $rb_data->encl_type(   $enclosure_type   );
 
           # If we're not updating an existing entry, we're creating an new one
           # if this is the case, we will be creating an reblog_data row
