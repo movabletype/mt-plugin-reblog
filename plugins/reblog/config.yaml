@@ -93,39 +93,39 @@ applications:
                 condition: $reblog::Reblog::CMS::menu_permission_sourcefeeds
 
 tags:
+    block:
+        EntryIfHasReblogAuthor?: $reblog::Reblog::Tags::_hdlr_entry_if_has_reblog_author
+        EntryIfReblog?:          $reblog::Reblog::Tags::_hdlr_entry_if_reblog
+        IfNotReblog?:            $reblog::Reblog::Tags::_hdlr_if_not_reblog
+        IfReblog?:               $reblog::Reblog::Tags::_hdlr_if_reblog
+        ReblogEnclosureEntries:  $reblog::Reblog::Tags::_hdlr_reblog_enclosure_entries
+        ReblogEntries:           $reblog::Reblog::Tags::_hdlr_reblog_entries
+        ReblogSourcefeeds:       $reblog::Reblog::Tags::_hdlr_reblog_sourcefeeds
     function:
-        EntryReblogSource:              $reblog::Reblog::Tags::_hdlr_entry_reblog_source
-        EntryReblogSourceLink:          $reblog::Reblog::Tags::_hdlr_entry_reblog_source_url
-        EntryReblogSourceURL:           $reblog::Reblog::Tags::_hdlr_entry_reblog_source_url
-        EntryReblogSourceLinkXML:       $reblog::Reblog::Tags::_hdlr_entry_reblog_source_feed_url
-        EntryReblogSourceFeedURL:       $reblog::Reblog::Tags::_hdlr_entry_reblog_source_feed_url
-        EntryReblogSourcefeedID:        $reblog::Reblog::Tags::_hdlr_entry_reblog_sourcefeed_id
-        EntryReblogLink:                $reblog::Reblog::Tags::_hdlr_entry_reblog_link
-        EntryReblogViaLink:             $reblog::Reblog::Tags::_hdlr_entry_reblog_via_link
-        EntryReblogSourcePublishedDate: $reblog::Reblog::Tags::_hdlr_entry_reblog_orig_date
-        EntryReblogSourceAuthor:        $reblog::Reblog::Tags::_hdlr_entry_reblog_source_author
-        EntryReblogAuthor:              $reblog::Reblog::Tags::_hdlr_entry_reblog_source_author
-        EntryReblogIdentifier:          $reblog::Reblog::Tags::_hdlr_entry_reblog_identifier
-        EntryReblogThumbnailLink:       $reblog::Reblog::Tags::_hdlr_entry_reblog_thumbnail_link
-        EntryReblogThumbnailImg:        $reblog::Reblog::Tags::_hdlr_entry_reblog_thumbnail_url
-        EntryReblogSourceTitle:         $reblog::Reblog::Tags::_hdlr_entry_reblog_orig_source_title
         EntryReblogAnnotation:          $reblog::Reblog::Tags::_hdlr_entry_reblog_annotation
-        ReblogSourceId:                 $reblog::Reblog::Tags::_hdlr_reblog_source_id
-        ReblogSourceTitle:              $reblog::Reblog::Tags::_hdlr_reblog_source
-        ReblogSourceLabel:              $reblog::Reblog::Tags::_hdlr_reblog_label
-        ReblogSource:                   $reblog::Reblog::Tags::_hdlr_reblog_source
-        ReblogSourceXMLLink:            $reblog::Reblog::Tags::_hdlr_reblog_source_feed_url
-        ReblogSourceFeedURL:            $reblog::Reblog::Tags::_hdlr_reblog_source_feed_url
-        ReblogSourceLink:               $reblog::Reblog::Tags::_hdlr_reblog_source_url
-        ReblogSourceURL:                $reblog::Reblog::Tags::_hdlr_reblog_source_url
+        EntryReblogAuthor:              $reblog::Reblog::Tags::_hdlr_entry_reblog_source_author
         EntryReblogEnclosure:           $reblog::Reblog::Tags::_hdlr_entry_reblog_enclosure
         EntryReblogEnclosureLength:     $reblog::Reblog::Tags::_hdlr_entry_reblog_enclosure_length
         EntryReblogEnclosureMimetype:   $reblog::Reblog::Tags::_hdlr_entry_reblog_enclosure_mimetype
-    block:
-        ReblogEntries:           $reblog::Reblog::Tags::_hdlr_reblog_entries
-        ReblogSourcefeeds:       $reblog::Reblog::Tags::_hdlr_reblog_sourcefeeds
-        ReblogEnclosureEntries:  $reblog::Reblog::Tags::_hdlr_reblog_enclosure_entries
-        IfReblog?:               $reblog::Reblog::Tags::_hdlr_if_reblog
-        IfNotReblog?:            $reblog::Reblog::Tags::_hdlr_if_not_reblog
-        EntryIfHasReblogAuthor?: $reblog::Reblog::Tags::_hdlr_entry_if_has_reblog_author
-        EntryIfReblog?:          $reblog::Reblog::Tags::_hdlr_entry_if_reblog
+        EntryReblogIdentifier:          $reblog::Reblog::Tags::_hdlr_entry_reblog_identifier
+        EntryReblogLink:                $reblog::Reblog::Tags::_hdlr_entry_reblog_link
+        EntryReblogSource:              $reblog::Reblog::Tags::_hdlr_entry_reblog_source
+        EntryReblogSourceAuthor:        $reblog::Reblog::Tags::_hdlr_entry_reblog_source_author
+        EntryReblogSourceFeedURL:       $reblog::Reblog::Tags::_hdlr_entry_reblog_source_feed_url
+        EntryReblogSourceLink:          $reblog::Reblog::Tags::_hdlr_entry_reblog_source_url
+        EntryReblogSourceLinkXML:       $reblog::Reblog::Tags::_hdlr_entry_reblog_source_feed_url
+        EntryReblogSourcePublishedDate: $reblog::Reblog::Tags::_hdlr_entry_reblog_orig_date
+        EntryReblogSourceTitle:         $reblog::Reblog::Tags::_hdlr_entry_reblog_orig_source_title
+        EntryReblogSourceURL:           $reblog::Reblog::Tags::_hdlr_entry_reblog_source_url
+        EntryReblogSourcefeedID:        $reblog::Reblog::Tags::_hdlr_entry_reblog_sourcefeed_id
+        EntryReblogThumbnailImg:        $reblog::Reblog::Tags::_hdlr_entry_reblog_thumbnail_url
+        EntryReblogThumbnailLink:       $reblog::Reblog::Tags::_hdlr_entry_reblog_thumbnail_link
+        EntryReblogViaLink:             $reblog::Reblog::Tags::_hdlr_entry_reblog_via_link
+        ReblogSource:                   $reblog::Reblog::Tags::_hdlr_reblog_source
+        ReblogSourceFeedURL:            $reblog::Reblog::Tags::_hdlr_reblog_source_feed_url
+        ReblogSourceId:                 $reblog::Reblog::Tags::_hdlr_reblog_source_id
+        ReblogSourceLabel:              $reblog::Reblog::Tags::_hdlr_reblog_label
+        ReblogSourceLink:               $reblog::Reblog::Tags::_hdlr_reblog_source_url
+        ReblogSourceTitle:              $reblog::Reblog::Tags::_hdlr_reblog_source
+        ReblogSourceURL:                $reblog::Reblog::Tags::_hdlr_reblog_source_url
+        ReblogSourceXMLLink:            $reblog::Reblog::Tags::_hdlr_reblog_source_feed_url
