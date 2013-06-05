@@ -547,8 +547,9 @@ sub do_import {
                 $nBuilt++;
                 if ($wants_rebuild) {
                     $pub->rebuild_entry(
-                        Entry => $eRec->{entry},
-                        Blog  => $blog
+                        Entry             => $eRec->{entry},
+                        Blog              => $blog,
+                        BuildDependencies => 1,
                     );
                 }
             }
@@ -562,8 +563,9 @@ sub do_import {
                 {
                     if ($wants_rebuild) {
                         $pub->rebuild_entry(
-                            Entry => $eRec->{entry},
-                            Blog  => $blog
+                            Entry             => $eRec->{entry},
+                            Blog              => $blog,
+                            BuildDependencies => 1,
                         );
                     }
                     $nBuilt++;
@@ -571,10 +573,7 @@ sub do_import {
             }    # /if eRec->{status} ne 'old'
         }    # /foreach eRec
     }    # / foreach $sourcefeed
-    if ( $nBuilt > 0 ) {
-        $pub->rebuild_indexes( Blog => $blog );
-        $pub->rebuild_categories( Blog => $blog );
-    }
+
     if ($scheduled) {
         Reblog::Import->error(undef);
         undef $@;
