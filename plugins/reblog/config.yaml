@@ -34,6 +34,8 @@ settings:
 
 system_config_template: system_config.tmpl
 
+init_app: $reblog::Reblog::Init::init_app
+
 callbacks:
     MT::App::CMS::template_param.edit_entry: $reblog::Reblog::CMS::inline_edit_entry
     cms_pre_save.ReblogSourcefeed: $reblog::Reblog::CMS::cms_sourcefeed_presave_callback
@@ -68,6 +70,9 @@ upgrade_functions:
     reblog_initialsourcefeed_load:
         version_limit: 2.7
         code: $reblog::Reblog::Upgrade::initial_sourcefeed_load
+    reblog_upgrade_column_names:
+        version_limit: 3
+        code: $reblog::Reblog::Upgrade::upgrade_column_names_data
 
 applications:
     cms:

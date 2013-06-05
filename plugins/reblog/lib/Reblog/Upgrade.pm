@@ -75,4 +75,78 @@ sub initial_sourcefeed_load {
     return 1;
 }
 
+# Abbreviated column names are needed for Oracle. Copy any data in the original
+# long-named columns to the new short-named columns so that user data continues
+# to work as expected. Note that in the init callback the legacy table/column
+# names are inserted into the registry so that this can run.
+sub upgrade_column_names_data {
+    my $app = shift;
+
+    # Update the Reblog Sourcefeed table, moving all data from the old table to
+    # the new Oracle-compatible table.
+    my %columns = (
+        # Old column name         New column name
+        # reblog_sourcefeed       reblog_srcfd
+        'id'                   => 'id',
+        'blog_id'              => 'blog_id',
+        'label'                => 'label',
+        'url'                  => 'url',
+        'is_active'            => 'is_active',
+        'is_excerpted'         => 'is_excerpted',
+        'category_id'          => 'category_id',
+        'epoch_last_read'      => 'last_read',
+        'epoch_last_fired'     => 'last_fired',
+        'total_failures'       => 'total_fails',
+        'consecutive_failures' => 'consec_fails',
+        'has_error'            => 'has_error',
+    );
+
+    my $iter = MT->model('ReblogSourcefeed_Legacy')->load_iter();
+    my $counter = 0;
+    while ( my $orig_record = $iter->() ) {
+        my $new_record = MT->model('ReblogSourcefeed')->new();
+        while ( my ($old_key, $new_key) = each (%columns) ) {
+            # Copy datafrom the old record and old column to the new record and
+            # new column.
+            $new_record->$new_key( $orig_record->$old_key );
+        }
+        $new_record->save or die $new_record->errstr;
+        $counter++;
+    }
+    
+    $app->progress(
+        "$counter reblog_sourcefeed records migrated to reblog_srcfd."
+    );
+
+    # Update the Reblog Data table. Only some column names were updated, so we
+    # can just copy from one column to another.
+    my %columns = (
+        # Old column name     New column name
+        'source'           => 'src',
+        'source_author'    => 'src_author',
+        'orig_created_on'  => 'src_created_on',
+        'source_feed_url'  => 'src_feed_url',
+        'source_url'       => 'src_url',
+        'source_title'     => 'src_title',
+        'enclosure_length' => 'encl_length',
+        'enclosure_type'   => 'encl_type',
+        'enclosure_url'    => 'encl_url',
+    );
+
+    my $iter = MT->model('ReblogData')->load_iter();
+    my $counter = 0;
+    while ( my $record = $iter->() ) {
+        while ( my ($old_key, $new_key) = each (%columns) ) {
+            # Copy data from the old column to the new column.
+            $record->$new_key( $record->$old_key );
+        }
+        $record->save or die $record->errstr;
+        $counter++;
+    }
+
+    $app->progress(
+        "$counter reblog_data records migrated to reblog_data."
+    );
+}
+
 1;
