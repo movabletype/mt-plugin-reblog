@@ -68,12 +68,13 @@ sub assign_categories {
     my $plugin = MT->component('reblog');
     my $import_categories;
     
-    # Load the Plugin setting that determines if categories are to be created based on
-    # the metadata in the entries appearing in the feed.
+    # Load the Plugin setting that determines if categories are to be created
+    # based on the metadata in the entries appearing in the feed.
     $import_categories = $plugin->get_config_value( 'import_categories',
         'blog:' . $blog->id );
     
-    # Exit this subroutine if the configuration doesn't require categories to be created.
+    # Exit this subroutine if the configuration doesn't require categories to
+    # be created.
     unless ($import_categories) {
         return $res;
     }
@@ -110,11 +111,13 @@ sub assign_categories {
         # Break up this subject into Category labels.
         (@cats) = split( /\:\:/, $sub );
         
-        # $parent is set to 0 at this stage because this is either the only category label
-        # or the first category label in a hierarchy that's being processed.
+        # $parent is set to 0 at this stage because this is either the only
+        # category label or the first category label in a hierarchy that's
+        # being processed.
         
-        # $cat_depth represents the place in the Category label hierarchy we are currently processing.
-        # If $cat_depth == $#cats, then the category belongs in the $place_hash shown below.
+        # $cat_depth represents the place in the Category label hierarchy we
+        # are currently processing. If $cat_depth == $#cats, then the category
+        # belongs in the $place_hash shown below.
         my $parent = 0;
         my $cat_depth = 0;
         
@@ -124,16 +127,25 @@ sub assign_categories {
             
             my ($existing_category);
             
-            # If $parent is not set, attempt to load the Category according to its label.
-            # If $parent is set, attempt to load the Category according to its label as a subcategory of $parent->id.
+            # If $parent is not set, attempt to load the Category according to
+            # its label. If $parent is set, attempt to load the Category
+            # according to its label as a subcategory of $parent->id.
             if ($parent == 0) {
-                $existing_category = MT::Category->load( { blog_id => $blog->id, label => $cat_label } );
+                $existing_category = MT::Category->load({
+                    blog_id => $blog->id,
+                    label   => $cat_label,
+                });
             } else {
-                $existing_category = MT::Category->load( { blog_id => $blog->id, label => $cat_label, parent => $parent->id } );
+                $existing_category = MT::Category->load({
+                    blog_id => $blog->id,
+                    label   => $cat_label,
+                    parent  => $parent->id,
+                });
             }
             
-            # If the Category exists already, assign it to $cat,
-            # otherwise create the category, assign it to $cat, and add it to the $cat_hash.
+            # If the Category exists already, assign it to $cat, otherwise
+            # create the category, assign it to $cat, and add it to the
+            # $cat_hash.
             if ($existing_category) {
                 $cat = $existing_category;
             } else {
@@ -141,12 +153,12 @@ sub assign_categories {
                 $cat_hash{ lc( $cat->label ) } = $cat;
             }
             
-            # If $cat_depth is equal to the number of elements in @cats, add it to the
-            # $place_hash if it doesn't already exist.
+            # If $cat_depth is equal to the number of elements in @cats, add it
+            # to the $place_hash if it doesn't already exist.
             #
-            # When $cat_depth == $#cats, this means that the Category was specified in
-            # the subjects and isn't just a parent category that needed to be created because
-            # it didn't exist.
+            # When $cat_depth == $#cats, this means that the Category was
+            # specified in the subjects and isn't just a parent category that
+            # needed to be created because it didn't exist.
             if ( $cat_depth == $#cats ) {
                 if ( exists( $place_hash{ $cat->id } ) ) {
                     $place = $place_hash{ $cat->id };
@@ -164,7 +176,8 @@ sub assign_categories {
                 }
             }
             
-            # Set the current Category to be the parent, add it to @res, and bump $cat_depth.            
+            # Set the current Category to be the parent, add it to @res, and
+            # bump $cat_depth.
             $parent = $cat;
             push( @$res, $cat );
             $cat_depth++;
@@ -178,15 +191,16 @@ sub assign_categories {
         $curr_cats{ $cat->id } = $cat;
     }
 
-    # Iterate through %place_hash, making sure that each placement exists in $curr_cats.
+    # Iterate through %place_hash, making sure that each placement exists in
+    # $curr_cats.
     foreach $place ( values %place_hash ) {
         if ( !exists( $curr_cats{ $place->category_id } ) ) {
             $place->remove();
         }
     }
 
-    # If the Primary Category isn't designated already, set it to the first Category listed
-    # on the entry in the feed.
+    # If the Primary Category isn't designated already, set it to the first
+    # Category listed on the entry in the feed.
     if ( !$primary && scalar(@$res) > 0 ) {
         my @vals = values(%place_hash); 
         $primary = $place_hash{ $vals[0] };
@@ -265,9 +279,9 @@ sub import_entries {
         $source_rss = $sourcefeed->url;
         $blog       = MT::Blog->load($blog_id);
 
-        # Someday perhaps we can have config directives
-        # allowing us to choose between MT::Cache::Negotiate,
-        # MT::Cache::Null, and a file-based caching system
+        # Someday perhaps we can have config directives allowing us to choose
+        # between MT::Cache::Negotiate, MT::Cache::Null, and a file-based
+        # caching system
         use MT::Cache::Negotiate;
         $cache = MT::Cache::Negotiate->new( ttl => $cache_ttl );
     }
@@ -463,7 +477,7 @@ sub import_entries {
             my $summary
                 = &_clean_html( $xp->findvalue( $map->{'summary'}, $node ) );
 
-         # it may not be in the map hash, so if there's no value, that's okay.
+            # it may not be in the map hash, so if there's no value, that's OK.
             my $modifiedTime = $xp->findvalue( 'updated', $node );
 
             # Tricky to get the enclosures tag because it has no value,
@@ -561,8 +575,8 @@ sub import_entries {
 
             my $entry;
 
-          # If we're updating an old reblogged row, we need this entry but
-          # can't use MT::Object join for this circumstance, so do it manually
+            # If we're updating an old reblogged row, we need this entry but
+            # can't use MT::Object join for this circumstance, so do it manually
             my (@rb_data) = Reblog::ReblogData->load( { guid => "$guid" },
                 { sort => 'created_on', direction => 'ascend' } );
             my $rb_data;
@@ -597,8 +611,8 @@ sub import_entries {
             $rb_data->encl_length( $enclosure_length );
             $rb_data->encl_type(   $enclosure_type   );
 
-          # If we're not updating an existing entry, we're creating an new one
-          # if this is the case, we will be creating an reblog_data row
+            # If we're not updating an existing entry, we're creating an new one
+            # if this is the case, we will be creating an reblog_data row
 
             if (!(  $rb_data->entry_id
                     && ($entry = MT::Entry->load(
@@ -663,7 +677,8 @@ sub import_entries {
                 $entry->basename( MT::Util::make_unique_basename($entry) )
                     if ( $status eq 'new' );
 
-# load SourceFeed by source_rss. If it's excerpted, then transform the $body and $created extended appropriately.
+                # load SourceFeed by source_rss. If it's excerpted, then
+                # transform the $body and $created extended appropriately.
                 my $so = Reblog::ReblogSourcefeed->load(
                     {   url       => $source_rss,
                         is_active => '1',
@@ -682,8 +697,9 @@ sub import_entries {
 
                 $entry->save || die "ENTRY SAVE FAILURE: " . $entry->errstr;
 
-# NOTE: The new entry save creates an rbd row, per our post_save callback, so we need to sync the ID
-# But sometimes, that doesn't happen, but it's overzealous to die.
+                # NOTE: The new entry save creates an rbd row, per our
+                # post_save callback, so we need to sync the ID. But sometimes,
+                # that doesn't happen, but it's overzealous to die.
                 my $entry_rb_data;
                 if ( $entry_rb_data
                     = Reblog::ReblogData->load( { entry_id => $entry->id } ) )
@@ -731,31 +747,31 @@ sub determine_file_type {
     my ($ext) = $url =~ m/\.(\w+)$/;
     $ext = lc $ext;
     my %listing = (
-        mp3 => 'audio/mpeg',
-        m4a => 'audio/mp4',
-        wma => 'audio/wma',
-        midi => 'audio/midi',
-        aa => 'audio/aa',
-        wav => 'audio/wav',
-        ogg => 'application/ogg',
+        mp3     => 'audio/mpeg',
+        m4a     => 'audio/mp4',
+        wma     => 'audio/wma',
+        midi    => 'audio/midi',
+        aa      => 'audio/aa',
+        wav     => 'audio/wav',
+        ogg     => 'application/ogg',
         torrent => 'application/x-bittorrent',
-        exe => 'application/octet-stream',
-        bmp => 'image/bmp',
-        jpg => 'image/jpeg',
-        jpeg => 'image/jpeg',
-        gif => 'image/gif',
-        tiff => 'image/tiff',
-        tif => 'image/tiff',
-        png => 'image/png',
-        mp4 => 'video/mp4',
-        mp4v => 'video/mp4',
-        mpeg => 'video/mpeg',
-        avi => 'video/msvideo',
-        mov => 'video/quicktime',
-        wmv => 'video/x-ms-wmv',
+        exe     => 'application/octet-stream',
+        bmp     => 'image/bmp',
+        jpg     => 'image/jpeg',
+        jpeg    => 'image/jpeg',
+        gif     => 'image/gif',
+        tiff    => 'image/tiff',
+        tif     => 'image/tiff',
+        png     => 'image/png',
+        mp4     => 'video/mp4',
+        mp4v    => 'video/mp4',
+        mpeg    => 'video/mpeg',
+        avi     => 'video/msvideo',
+        mov     => 'video/quicktime',
+        wmv     => 'video/x-ms-wmv',
     );
-return $listing{$ext} || 'unknown';
-    
+
+    return $listing{$ext} || 'unknown';
 }
 
 sub _clean_html {
