@@ -84,18 +84,46 @@ applications:
             save_sourcefeed:     $reblog::Reblog::CMS::save_sourcefeed
             import_sourcefeeds:  $reblog::Reblog::CMS::import_sourcefeeds
         menus:
-            manage:reblog_settings:
-                label:     Reblog
+            tools:reblog_settings:
+                label:     'Reblog Configuration'
                 mode:      rb_blog_config
                 order:     100001
                 view:      blog
                 condition: $reblog::Reblog::CMS::menu_permission_reblog
-            manage:reblog_sourcefeeds:
-                label:     Sourcefeeds
+            # MT5
+            tools:reblog_sourcefeeds:
+                label: 'Reblog Sourcefeeds'
+                mode:  list
+                args:
+                    _type: ReblogSourcefeed
+                order: 100002
+                view:
+                    - blog
+                    - website
+                condition: $reblog::Reblog::CMS::menu_permission_sourcefeeds_mt5
+            # MT4
+            tools:reblog_sourcefeeds_mt4:
+                label:     'Reblog Sourcefeeds'
                 mode:      rb_view_sourcefeeds
                 order:     100002
                 view:      blog
-                condition: $reblog::Reblog::CMS::menu_permission_sourcefeeds
+                condition: $reblog::Reblog::CMS::menu_permission_sourcefeeds_mt4
+
+listing_screens:
+    ReblogSourcefeed:
+        primary: url
+        default_sort_key: label
+
+list_properties:
+    ReblogSourcefeed: $reblog::Reblog::ReblogSourcefeed::list_properties
+
+content_actions:
+    ReblogSourcefeed:
+        create:
+            label:  'Add a new sourcefeed'
+            order:  100
+            mode:   edit_sourcefeed
+            class:  'icon-create'
 
 tags:
     block:

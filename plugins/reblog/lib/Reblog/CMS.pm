@@ -529,7 +529,7 @@ sub check_perms {
 }
 
 # The menu condition to check if the user in context has adequate permission to
-# view the Manage > Reblog menu item.
+# view the Tools > Reblog Configuration menu item.
 sub menu_permission_reblog {
     my $app = MT->instance;
     unless ($app) {
@@ -552,8 +552,20 @@ sub menu_permission_reblog {
 }
 
 # The menu condition to check if the user in context has adequate permission to
-# view the Manage > Sourcefeeds menu item.
-sub menu_permission_sourcefeeds {
+# view the Tools > Reblog Sourcefeeds menu item. Check for the required version
+# of MT first, then consider permissions.
+sub menu_permission_sourcefeeds_mt5 {
+    return 0 if MT->product_version =~ /^4/; # MT5 only
+    return _menu_permission_sourcefeeds();
+}
+
+sub menu_permission_sourcefeeds_mt4 {
+    return 0 if MT->product_version =~ /^5/; # MT5 only
+    return _menu_permission_sourcefeeds();
+}
+
+# Called by the version-specific check, above.
+sub _menu_permission_sourcefeeds {
     my $app = MT->instance;
     unless ($app) {
         return 0;

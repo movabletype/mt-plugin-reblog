@@ -48,9 +48,9 @@ After downloading and uncompressing this package:
 
 Once installed, this plugin appears under the Manage menu in each blog in two places:
 
-Manage > Reblog
+Tools > Reblog Configuration
 
-Manage > Sourcefeeds
+Tools > Reblog Sourcefeeds
 
 # Additional Documentation
 

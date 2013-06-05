@@ -152,6 +152,105 @@ sub increment_error {
     }
 }
 
+# Build the Reblog Sourcefeed listing framework screen.
+sub list_properties {
+    return {
+        label => {
+            label   => 'Label',
+            base    => '__virtual.label',
+            col     => 'label',
+            default => 'display',
+            order   => 100,
+            sub_fields => [
+                {
+                    class   => 'is_active',
+                    label   => 'Active?',
+                    display => 'default',
+                },
+            ],
+            html    => sub {
+                # Override the <a/> with label because the default returns a URL
+                # that doesn't include the necessary parameters.
+                my $prop = shift;
+                my ( $obj, $app, $opts ) = @_;
+                my $url = $app->uri(
+                    mode => 'edit_sourcefeed',
+                    args => {
+                        id      => $obj->id,
+                        blog_id => $obj->blog_id,
+                    },
+                );
+                
+                my $label = $obj->label;
+
+                my $is_active = $obj->is_active;
+                my $is_active_class = ($is_active) ? 'Active' : 'Inactive';
+                my $lc_is_active_class = lc $is_active_class;
+                my $is_active_file = ($is_active) ? 'success.gif' : 'draft.gif';
+                my $is_active_img = $app->static_path . 'images/status_icons/'
+                    . $is_active_file;
+
+                return qq{
+                    <span class="icon is_active $lc_is_active_class">
+                        <a href="$url">
+                            <img alt="$is_active_class"
+                                title="$is_active_class"
+                                src="$is_active_img" />
+                        </a>
+                    </span>
+                    <span class="title">
+                        <a href="$url">$label</a>
+                    </span>
+                };
+            },
+        },
+        url => {
+            label   => 'URL',
+            base    => '__virtual.string',
+            col     => 'url',
+            default => 'display',
+            order   => 200,
+        },
+        is_active => {
+            label     => 'Is Active?',
+            base      => '__virtual.single_select',
+            col       => 'is_active',
+            display   => 'none',
+            col_class => 'icon',
+            single_select_options => [
+                {
+                    label => 'Active',
+                    value => 1,
+                },
+                {
+                    label => 'Inactive',
+                    value => 0,
+                },
+            ],
+        },
+        created_by => {
+            base    => '__virtual.author_name',
+            order   => 700,
+            display => 'default',
+        },
+        created_on => {
+            base    => '__virtual.created_on',
+            order   => 701,
+            display => 'default',
+        },
+        modified_by => {
+            base  => '__virtual.author_name',
+            label => 'Modified By',
+            order => 710,
+        },
+        modified_on => {
+            base  => '__virtual.modified_on',
+            order => 711,
+        },
+        
+    };
+}
+
 1;
 
 package Reblog::Log::ReblogSourcefeed;
