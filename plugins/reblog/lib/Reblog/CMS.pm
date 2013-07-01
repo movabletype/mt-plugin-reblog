@@ -509,6 +509,14 @@ sub inline_edit_entry {
 sub check_perms {
     my ( $perms, $author, $type ) = @_;
     my $plugin = MT->component('reblog');
+    my $app    = MT->instance;
+
+    # If the user has moved from the blog level to the system level, be sure to
+    # redirect them to the dashboard.
+    if (!$app->blog) {
+        return $app->redirect($app->mt_uri . '?__mode=dashboard&blog_id=0');
+    }
+
     unless ( $perms && $author && $type ) {
         return;
     }
