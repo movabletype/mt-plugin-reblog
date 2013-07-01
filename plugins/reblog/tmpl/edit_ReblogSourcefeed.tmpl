@@ -161,21 +161,34 @@ function validateForm() {
 
 <mtapp:setting
     id="is_active"
-    label="<__trans phrase="Active">">
-        <input type="checkbox" name="is_active" id="is_active" value="1" <mt:if name="is_active">checked="checked"</mt:if>/>
+    label="<__trans phrase="Status">">
+    <select name="is_active" id="is_active">
+        <option value="1"
+            <mt:If name="is_active">selected</mt:If>>
+            <__trans phrase="Active">
+        </option>
+        <option value="0"
+            <mt:Unless name="is_active">selected</mt:Unless>>
+            <__trans phrase="Inactive">
+        </option>
+    </select>
 </mtapp:setting>
 
 <mtapp:setting
     id="is_excerpted"
-    label="<__trans phrase="Use excerpts">">
+    label="<__trans phrase="Use Excerpts">"
+    hint="The imported feed&rsquo;s Summary node is used to populate the Body field. Check this option to try to split the Summary node across both the Body and Extended Body fields."
+    show_hint="1">
         <input type="checkbox" name="is_excerpted" id="is_excerpted" value="1" <mt:if name="is_excerpted">checked="checked"</mt:if>/>
 </mtapp:setting>
 
-    <mtapp:setting
-        id="clear_errors"
-        label="<__trans phrase="Clear Errors">">
-            <input type="checkbox" name="clear_errors" value="1" id="clear_errors" />
-    </mtapp:setting>
+<mtapp:setting
+    id="clear_errors"
+    label="<__trans phrase="Clear Errors">"
+    hint="Reset the Failed Load Threshold for this feed to zero (0)."
+    show_hint="1">
+        <input type="checkbox" name="clear_errors" value="1" id="clear_errors" />
+</mtapp:setting>
 
 <div id="clear_errors-field" class="field field-left-label pkg">
     <div class="field-inner">
@@ -193,6 +206,10 @@ function validateForm() {
             <p id="msg-block">
                 <span id="validation-report">Validation check has not been run.</span>
             </p>
+
+            <div class="hint">
+                A validation check to ensures that the specified URL can be imported.
+            </div>
         </div>
     </div>
 </div>
