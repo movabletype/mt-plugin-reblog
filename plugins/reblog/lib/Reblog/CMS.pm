@@ -94,7 +94,10 @@ sub config {
     );
     my @author_loop;
     while ( my $a = $author_iter->() ) {
-        next unless ( $a->permissions($blog)->has('publish_post') );
+        next unless (
+            $a->permissions($blog)->has('publish_post')
+            || $a->can_administer()
+        );
         my $row;
         my $shown = $a->name;
         if ( $a->nickname ) { $shown .= ' (' . $a->nickname . ')'; }
