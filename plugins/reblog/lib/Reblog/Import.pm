@@ -63,24 +63,44 @@ sub iso2dt {
 }
 
 sub assign_categories {
-    my ( $entry, $blog, $author, $subjects ) = @_;
-    my $res    = [];
-    my $plugin = MT->component('reblog');
-    my $import_categories;
-    
+    my ($arg_ref) = @_;
+    my $entry      = $arg_ref->{entry};
+    my $blog       = $arg_ref->{blog};
+    my $author     = $arg_ref->{author};
+    my $categories = $arg_ref->{cats};
+    my $feed_title = $arg_ref->{feed_title};
+
+    my $res     = [];
+    my $plugin  = MT->component('reblog');
+    my $blog_id = $blog->id;
+
     # Load the Plugin setting that determines if categories are to be created
     # based on the metadata in the entries appearing in the feed.
-    $import_categories = $plugin->get_config_value( 'import_categories',
-        'blog:' . $blog->id );
-    
+    my $import_categories = $plugin->get_config_value( 'import_categories',
+        'blog:' . $blog_id );
+    my $feed_title_to_cat = $plugin->get_config_value(
+        'import_feed_title_as_category',
+        'blog:' . $blog_id
+    );
+
     # Exit this subroutine if the configuration doesn't require categories to
     # be created.
-    unless ($import_categories) {
+    unless ($import_categories || $feed_title_to_cat) {
         return $res;
     }
-    
+
+    # Create a string of whatever categories are needed based on the
+    # configuration selections.
+    my @saved_cats;
+    push @saved_cats, $feed_title
+        if $feed_title_to_cat;
+    push @saved_cats, $categories
+        if $import_categories;
+
+    my $saved_categories = join( SPLIT_TOKEN, @saved_cats);
+
     # Load the categories that already exist in this blog into @cats.
-    my (@cats) = MT::Category->load( { blog_id => $blog->id } );
+    my (@cats) = MT::Category->load( { blog_id => $blog_id } );
     my ( $cat, $place );
 
     # Create %cat_hash with Category label keys.
@@ -98,14 +118,14 @@ sub assign_categories {
     foreach $place (@placements) {
         $place_hash{ $place->category_id } = $place;
     }
-    
-    # Break the subjects up into individual array elements in @subs.
+
+    # Break the categories up into individual array elements in @subs.
     my @subs;
-    ($subjects) && ( @subs = split( SPLIT_TOKEN, $subjects ) );
-    
-    # Iterate through the subjects in @subs.
+    ($saved_categories) && ( @subs = split( SPLIT_TOKEN, $saved_categories ) );
+
+    # Iterate through the categories in @subs.
     my $primary = 0;
-    
+
     foreach my $sub (@subs) {
 
         # Break up this subject into Category labels.
@@ -132,12 +152,12 @@ sub assign_categories {
             # according to its label as a subcategory of $parent->id.
             if ($parent == 0) {
                 $existing_category = MT::Category->load({
-                    blog_id => $blog->id,
+                    blog_id => $blog_id,
                     label   => $cat_label,
                 });
             } else {
                 $existing_category = MT::Category->load({
-                    blog_id => $blog->id,
+                    blog_id => $blog_id,
                     label   => $cat_label,
                     parent  => $parent->id,
                 });
@@ -157,7 +177,7 @@ sub assign_categories {
             # to the $place_hash if it doesn't already exist.
             #
             # When $cat_depth == $#cats, this means that the Category was
-            # specified in the subjects and isn't just a parent category that
+            # specified in the $categories and isn't just a parent category that
             # needed to be created because it didn't exist.
             if ( $cat_depth == $#cats ) {
                 if ( exists( $place_hash{ $cat->id } ) ) {
@@ -212,6 +232,7 @@ sub assign_categories {
     return $res;
 }
 
+# When importing, if a category doesn't exist it should be created.
 sub create_category {
     my ( $label, $blog, $author, $parent ) = @_;
     my $author_id;
@@ -708,7 +729,13 @@ sub import_entries {
                 }
 
                 $categories
-                    = assign_categories( $entry, $blog, $author, $subjects );
+                    = assign_categories({
+                        entry      => $entry,
+                        blog       => $blog,
+                        author     => $author,
+                        cats       => $subjects,
+                        feed_title => $channeltitle,
+                    });
 
                 $rb_data->modified_on($date);
                 $rb_data->entry_id( $entry->id );

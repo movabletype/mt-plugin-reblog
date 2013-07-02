@@ -27,8 +27,20 @@ sub config {
     my $plugin = MT->component('reblog');
     my $tmpl   = $plugin->load_tmpl('config.tmpl');
     my $param;
-    use MT::Blog;
-    my $blog = MT::Blog->load( $app->param('blog_id') );
+
+    die $app->error('Required "blog_id" parameter is missing.')
+        if !$app->param('blog_id');
+
+    my $blog = MT->model('blog')->load( $app->param('blog_id') )
+        or die $app->error(
+            'A blog with the ID ' . $app->param('blog_id') . ' was not found.'
+        );
+
+    # This is used frequently when getting and setting plugin options. No need
+    # to keep re-building it.
+    my $blog_shortcut = 'blog:' . $blog->id;
+
+    # Save the options as specified.
     if ( $app->param('save') ) {
         my $frequency = $app->param('frequency');
         if ( !$frequency || $frequency < 15 * 60 ) {
@@ -38,12 +50,12 @@ sub config {
         $plugin->set_config_value(
             'frequency',
             $app->param('frequency'),
-            'blog:' . $blog->id
+            $blog_shortcut
         );
         $plugin->set_config_value(
             'default_author',
             $app->param('reblog_author'),
-            'blog:' . $blog->id
+            $blog_shortcut
         );
         if (   $app->param('max_failures') =~ m/^\d+$/
             && $app->param('max_failures') )
@@ -53,34 +65,42 @@ sub config {
             $plugin->set_config_value(
                 'max_failures',
                 $max_failures,
-                'blog:' . $blog->id
+                $blog_shortcut
             );
         }
         if ( $app->param('import_categories') ) {
-            $plugin->set_config_value( 'import_categories', 1,
-                'blog:' . $blog->id );
+            $plugin->set_config_value( 'import_categories', 1, $blog_shortcut );
         }
         else {
-            $plugin->set_config_value( 'import_categories', 0,
-                'blog:' . $blog->id );
+            $plugin->set_config_value( 'import_categories', 0, $blog_shortcut );
         }
+
+        if ( $app->param('import_feed_title_as_category') ) {
+            $plugin->set_config_value( 'import_feed_title_as_category', 1,
+                $blog_shortcut );
+        }
+        else {
+            $plugin->set_config_value( 'import_feed_title_as_category', 0,
+                $blog_shortcut );
+        }
+
         if ( $app->param('rebuild_individual') ) {
-            $plugin->set_config_value( 'rebuild_individual', 1,
-                'blog:' . $blog->id );
+            $plugin->set_config_value( 'rebuild_individual', 1, $blog_shortcut );
         }
         else {
-            $plugin->set_config_value( 'rebuild_individual', 0,
-                'blog:' . $blog->id );
+            $plugin->set_config_value( 'rebuild_individual', 0, $blog_shortcut );
         }
+
         if ( $app->param('display_entry_details') ) {
             $plugin->set_config_value( 'display_entry_details', 1,
-                'blog:' . $blog->id );
+                $blog_shortcut );
         }
         else {
             $plugin->set_config_value( 'display_entry_details', 0,
-                'blog:' . $blog->id );
+                $blog_shortcut );
         }
     }
+
     use MT::Author;
     my $author_iter = MT::Author->load_iter(
         {},
@@ -106,6 +126,7 @@ sub config {
         push @author_loop, $row;
     }
     $param->{author_loop}    = \@author_loop;
+
     $param->{frequency_loop} = [
         { frequency => 'Every 24 hours',   seconds => 24 * 60 * 60 },
         { frequency => 'Every 12 hours',   seconds => 12 * 60 * 60 },
@@ -114,28 +135,28 @@ sub config {
         { frequency => 'Hourly',           seconds => 60 * 60 },
         { frequency => 'Every 30 minutes', seconds => 30 * 60 },
         { frequency => 'Every 15 minutes', seconds => 15 * 60 },
-    { frequency => 'Every 10 minutes', seconds => 10 * 60 },
-    { frequency => 'Every 5 minutes',  seconds => 5 * 60 }
+        { frequency => 'Every 10 minutes', seconds => 10 * 60 },
+        { frequency => 'Every 5 minutes',  seconds => 5 * 60 }
     ];
-    unless ($blog) {
-        return $app->error('Blog not found');
-    }
+
     $param->{blog_name} = $blog->name;
     $param->{display_entry_details}
-        = $plugin->get_config_value( 'display_entry_details',
-        'blog:' . $blog->id );
+        = $plugin->get_config_value( 'display_entry_details', $blog_shortcut );
     $param->{default_author_id}
-        = $plugin->get_config_value( 'default_author', 'blog:' . $blog->id );
+        = $plugin->get_config_value( 'default_author', $blog_shortcut );
     $param->{default_frequency}
-        = $plugin->get_config_value( 'frequency', 'blog:' . $blog->id );
+        = $plugin->get_config_value( 'frequency', $blog_shortcut );
     $param->{default_max_failures}
-        = $plugin->get_config_value( 'max_failures', 'blog:' . $blog->id );
+        = $plugin->get_config_value( 'max_failures', $blog_shortcut );
     $param->{rebuild_individual}
-        = $plugin->get_config_value( 'rebuild_individual',
-        'blog:' . $blog->id );
+        = $plugin->get_config_value( 'rebuild_individual', $blog_shortcut );
     $param->{import_categories}
-        = $plugin->get_config_value( 'import_categories',
-        'blog:' . $blog->id );
+        = $plugin->get_config_value( 'import_categories', $blog_shortcut );
+    $param->{import_feed_title_as_category}
+        = $plugin->get_config_value(
+            'import_feed_title_as_category',
+            $blog_shortcut
+        );
 
     $app->build_page( $tmpl, $param );
 }

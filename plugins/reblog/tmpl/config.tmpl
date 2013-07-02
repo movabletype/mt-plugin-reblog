@@ -90,20 +90,27 @@
 </mtapp:setting>
 
 <mtapp:setting
-    id="import_categories"
-    label="<__trans phrase="Import Categories">"
-    hint="Preserve categories found in imported entries."
-    show_hint="1">
-    <select name="import_categories" id="import_categories">
-        <option value="1"
-            <mt:if var="import_categories"> selected="selected"</mt:if>>
-            Yes
-        </option>
-        <option value="0"
-            <mt:unless var="import_categories"> selected="selected"</mt:unless>>
-            No
-        </option>
-    </select>
+    id="categories"
+    label="<__trans phrase="Categories">"
+    hint=""
+    show_hint="0">
+    <input type="checkbox"
+        name="import_feed_title_as_category"
+        id="import_feed_title_as_category"
+        value="1"
+        <mt:If name="import_feed_title_as_category">checked</mt:If> />
+    <label for="import_feed_title_as_category">
+        Save the feed title as a category.
+    </label><br />
+
+    <input type="checkbox"
+        name="import_categories"
+        id="import_categories"
+        value="1"
+        <mt:If name="import_categories">checked</mt:If> />
+    <label for="import_categories">
+        Preserve categories found in imported entries.
+    </label>
 </mtapp:setting>
 
 <mtapp:setting

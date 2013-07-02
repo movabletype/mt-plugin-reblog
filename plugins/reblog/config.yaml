@@ -22,6 +22,9 @@ settings:
     frequency:
         scope: blog
         default: 43200
+    import_feed_title_as_category:
+        scope: blog
+        default: 0
     import_categories:
         scope: blog
         default: 0
