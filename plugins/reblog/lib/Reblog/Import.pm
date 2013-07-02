@@ -235,6 +235,8 @@ sub assign_categories {
 # When importing, if a category doesn't exist it should be created.
 sub create_category {
     my ( $label, $blog, $author, $parent ) = @_;
+    my $app = MT->instance;
+
     my $author_id;
     if ( $author == -1 ) {
         $author_id = 0;
@@ -242,14 +244,28 @@ sub create_category {
     else {
         $author_id = $author->id;
     }
+
     my $cat = MT::Category->new();
+    my $original = $cat->clone;
+
     $cat->blog_id( $blog->id );
     $cat->allow_pings( $blog->allow_pings_default );
     $cat->label($label);
     $cat->author_id($author_id);
     $cat->parent( ( $parent ? $parent->id : 0 ) );
 
-    $cat->save();
+    $cat->save() or die $cat->errstr;
+
+    $app->log({
+       message => $app->translate(
+            "Category '[_1]' created by '[_2]'", $cat->label,
+            $app->user->name
+        ),
+        level    => MT::Log::INFO(),
+        class    => 'category',
+        category => 'new',
+    });
+
     return MT::Category->load( $cat->id );
 }
 
@@ -269,14 +285,18 @@ sub create_placement {
 sub import_entries {
     my $class = shift;
     my ( $sourcefeed, $args ) = @_;
+    my $app = MT->instance;
+
     my ( $blog_id, $author, $suppress, $cache_ttl );
     $blog_id   = $args->{blog_id};
     $author    = $args->{author};
     $suppress  = $args->{suppress};
     $cache_ttl = $args->{cache_ttl};
+
     unless ( $cache_ttl && $cache_ttl =~ m|^\d+$| ) {
         $cache_ttl ||= 15 * 60;
     }
+
     my $author_id;
     my ( $blog, $cache, $source_rss );
     my $config = MT::ConfigMgr->instance;
@@ -743,6 +763,17 @@ sub import_entries {
                 $rb_data->save
                     || return $class->error(
                     "RBDATA SAVE FAILURE: " . $rb_data->errstr );
+
+                $app->log({
+                    message  => $app->translate(
+                        "Entry '[_1]' (ID:[_2]) added by Reblog for user '[_3]'",
+                        $entry->title, $entry->id, $author->name
+                    ),
+                    level    => MT::Log::INFO(),
+                    class    => 'entry',
+                    category => 'new', # A new entry.
+                    metadata => $entry->id,
+                });
             }
 
             MT->run_callbacks( 'plugin_reblog_entry_parsed', $entry, $rb_data,
