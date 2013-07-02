@@ -117,6 +117,33 @@ listing_screens:
 list_properties:
     ReblogSourcefeed: $reblog::Reblog::ReblogSourcefeed::list_properties
 
+list_actions:
+    ReblogSourcefeed:
+        import:
+            label:  'Import'
+            order:  100
+            mode:   import_sourcefeeds
+            button: 1
+            condition: >
+                sub {
+                    # Show in MT5 only.
+                    return 0 if MT->product_version =~ /^4/;
+                    return 1;
+                }
+        delete:
+            label:      'Delete'
+            order:      200
+            code:       'MT::CMS::Common::delete'
+            mode:       'delete'
+            js_message: 'delete'
+            button:     1
+            condition: >
+                sub {
+                    # Show in MT5 only.
+                    return 0 if MT->product_version =~ /^4/;
+                    return 1;
+                }
+
 content_actions:
     ReblogSourcefeed:
         create:
