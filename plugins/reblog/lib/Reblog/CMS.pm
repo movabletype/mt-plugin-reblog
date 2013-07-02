@@ -158,6 +158,9 @@ sub config {
             $blog_shortcut
         );
 
+    # Status messaging.
+    $param->{saved} = $app->param('save');
+
     $app->build_page( $tmpl, $param );
 }
 
