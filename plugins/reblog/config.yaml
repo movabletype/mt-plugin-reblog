@@ -5,7 +5,7 @@ version:        2.4
 schema_version: 3
 description:    Plugin for automatic syndication with attribution.
 plugin_link:    https://github.com/movabletype/mt-plugin-reblog
-author_name:    Six Apart, Ltd., After6 Services LLC, and 601am LLC, et. al.; original Reblog by Eyebeam & Stamen
+author_name:    Original Reblog by Eyebeam & Stamen, with many revisions by Six Apart, Ltd., After6 Services LLC, 601am LLC, and Endevver.
 
 settings:
     restrict_reblog:
