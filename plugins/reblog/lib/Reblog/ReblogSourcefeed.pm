@@ -171,8 +171,7 @@ sub list_properties {
             html    => sub {
                 # Override the <a/> with label because the default returns a URL
                 # that doesn't include the necessary parameters.
-                my $prop = shift;
-                my ( $obj, $app, $opts ) = @_;
+                my ( $prop, $obj, $app, $opts ) = @_;
                 my $url = $app->uri(
                     mode => 'edit_sourcefeed',
                     args => {

@@ -144,9 +144,8 @@ sub assign_categories {
         # Iterate through the Category labels.
         foreach my $cat_label (@cats) {
             $cat_label =~ s/\+/ /igs;
-            
             my ($existing_category);
-            
+
             # If $parent is not set, attempt to load the Category according to
             # its label. If $parent is set, attempt to load the Category
             # according to its label as a subcategory of $parent->id.
@@ -162,7 +161,7 @@ sub assign_categories {
                     parent  => $parent->id,
                 });
             }
-            
+
             # If the Category exists already, assign it to $cat, otherwise
             # create the category, assign it to $cat, and add it to the
             # $cat_hash.
@@ -187,12 +186,12 @@ sub assign_categories {
                     $place = create_placement( $entry, $cat, 0 );
                     $place_hash{ $cat->id } = $place;
                 }
-                
+
                 # If there is no Primary Category yet, set it to this Category.
                 if ( !$primary ) {
                     $primary = $place;
                     $primary->is_primary(1);
-                    $primary->save();
+                    $primary->save() or die $primary->errstr;
                 }
             }
             
@@ -215,7 +214,7 @@ sub assign_categories {
     # $curr_cats.
     foreach $place ( values %place_hash ) {
         if ( !exists( $curr_cats{ $place->category_id } ) ) {
-            $place->remove();
+            $place->remove() or die $place->errstr;
         }
     }
 
@@ -225,7 +224,7 @@ sub assign_categories {
         my @vals = values(%place_hash); 
         $primary = $place_hash{ $vals[0] };
         $primary->is_primary(1);
-        $primary->save();
+        $primary->save() or die $primary->errstr;
     }
 
     # Return the data structure representing the Categories.
@@ -277,7 +276,7 @@ sub create_placement {
     $place->blog_id( $entry->blog_id );
     $place->category_id( $cat->id );
     $place->is_primary($is_primary);
-    $place->save();
+    $place->save() or die $place->errstr;
 
     return MT::Placement->load( $place->id );
 }
@@ -742,9 +741,10 @@ sub import_entries {
                 # post_save callback, so we need to sync the ID. But sometimes,
                 # that doesn't happen, but it's overzealous to die.
                 my $entry_rb_data;
-                if ( $entry_rb_data
-                    = Reblog::ReblogData->load( { entry_id => $entry->id } ) )
-                {
+                if (
+                    $entry_rb_data
+                        = Reblog::ReblogData->load({ entry_id => $entry->id })
+                ) {
                     $rb_data->id( $entry_rb_data->id );
                 }
 
@@ -761,8 +761,9 @@ sub import_entries {
                 $rb_data->entry_id( $entry->id );
 
                 $rb_data->save
-                    || return $class->error(
-                    "RBDATA SAVE FAILURE: " . $rb_data->errstr );
+                    || die $class->error(
+                        "RBDATA SAVE FAILURE: " . $rb_data->errstr
+                    );
 
                 $app->log({
                     message  => $app->translate(

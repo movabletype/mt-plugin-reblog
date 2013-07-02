@@ -483,10 +483,16 @@ sub do_import {
     use MT::Util qw( encode_html );
     use MT::WeblogPublisher;
     my ( $app, $auth, $blog, @sources ) = @_;
-    my $scheduled = 0;
-    my $pub       = MT::WeblogPublisher->new;
-    my $blog_id   = $blog->id;
-    my $plugin    = MT->component('reblog');
+
+    my $scheduled     = 0;
+    my $pub           = MT::WeblogPublisher->new;
+    my $blog_id       = $blog->id;
+    my $plugin        = MT->component('reblog');
+    my $ttl           = MT->config('ReblogCacheTTL');
+    my $wants_rebuild = $plugin->get_config_value(
+        'rebuild_individual',
+        'blog:' . $blog_id
+    );
 
     if ( $auth && $blog ) {
         $scheduled = 1;
@@ -508,23 +514,26 @@ sub do_import {
         else {
             $auth = MT::Author->load($default_author);
             unless ($auth) {
-                return $app->error('Could not load default author for blog');
+                die $app->error(
+                    'Reblog could not load a default author for this blog.'
+                );
             }
         }
     }
+
+    # Variables used to count and return the total number of entries parsed
+    # and/or updated.
     my $feedcount = 0;
+    our $nBuilt   = 0;
 
     my @sourcefeeds;
     if (@sources) {
         @sourcefeeds = @sources;
     }
     else {
-        return $app->error('No sourcefeeds selected');
+        die $app->error('No sourcefeeds selected.');
     }
-    our $nBuilt = 0;
-    my $wants_rebuild = $plugin->get_config_value( 'rebuild_individual',
-        'blog:' . $blog_id );
-    my $ttl = MT->config('ReblogCacheTTL');
+
     foreach my $sourcefeed (@sourcefeeds) {
         my (@entries);
 
@@ -541,7 +550,8 @@ sub do_import {
         $sourcefeed->has_error(0);
         $sourcefeed->consec_fails(0);
         $sourcefeed->last_read( time() );
-        $sourcefeed->save;
+        $sourcefeed->save or die $sourcefeed->errstr;
+
         foreach my $eRec (@entries) {
             if ( $eRec->{status} ne 'old' ) {
                 $nBuilt++;
@@ -559,8 +569,8 @@ sub do_import {
 
                 # Or if it's an existing entry that has been published
                 if (   $existingEntry
-                    && $existingEntry->status == MT::Entry::RELEASE() )
-                {
+                    && $existingEntry->status == MT::Entry::RELEASE()
+                ) {
                     if ($wants_rebuild) {
                         $pub->rebuild_entry(
                             Entry             => $eRec->{entry},
@@ -586,12 +596,12 @@ sub do_import {
             $entries = 'entry';
         }
         if ( $feedcount == 1 ) {
-            $str
-                = "$feedcount feed read successfully; $nBuilt new or updated $entries found.";
+            $str = "$feedcount feed read successfully; $nBuilt new or updated "
+                . "$entries found.";
         }
         else {
-            $str
-                = "$feedcount feeds read successfully; $nBuilt new or updated $entries found.";
+            $str = "$feedcount feeds read successfully; $nBuilt new or updated "
+                . "$entries found.";
         }
         Reblog::Import->error(undef);
         undef $@;
