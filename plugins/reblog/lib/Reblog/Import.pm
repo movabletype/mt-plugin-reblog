@@ -234,7 +234,6 @@ sub assign_categories {
 # When importing, if a category doesn't exist it should be created.
 sub create_category {
     my ( $label, $blog, $author, $parent ) = @_;
-    my $app = MT->instance;
 
     my $author_id;
     if ( $author == -1 ) {
@@ -255,10 +254,10 @@ sub create_category {
 
     $cat->save() or die $cat->errstr;
 
-    $app->log({
-       message => $app->translate(
+    MT->log({
+       message => MT->translate(
             "Category '[_1]' created by '[_2]'", $cat->label,
-            $app->user->name
+            $author->name
         ),
         level    => MT::Log::INFO(),
         class    => 'category',
