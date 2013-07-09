@@ -644,9 +644,6 @@ sub import_entries {
                 $entry = MT::Entry->load(
                     { id => $rbd->entry_id, blog_id => $blog_id } );
                 if ($entry) {
-
-                    my $tempCatRef = $entry->category;
-                    my @categories = keys(%$tempCatRef);
                     $rb_data = $rbd;
                 }
             }
