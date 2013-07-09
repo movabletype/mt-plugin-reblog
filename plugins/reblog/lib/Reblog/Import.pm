@@ -25,7 +25,7 @@ use Date::Parse;
 
 use MT::Author;
 use MT::Blog;
-use MT::Util qw( format_ts offset_time_list offset_time ts2epoch epoch2ts );
+use MT::Util qw( offset_time ts2epoch epoch2ts dirify );
 
 use URI::Fetch;
 use XML::XPath;
@@ -168,8 +168,29 @@ sub assign_categories {
             if ($existing_category) {
                 $cat = $existing_category;
             } else {
-                $cat = create_category( $cat_label, $blog, $author, $parent );
-                $cat_hash{ lc( $cat->label ) } = $cat;
+
+                # Try harder to find a matching category with a basename match.
+                if ($parent == 0) {
+                    $existing_category = MT::Category->load({
+                        blog_id  => $blog_id,
+                        basename => dirify($cat_label),
+                    });
+                } else {
+                    $existing_category = MT::Category->load({
+                        blog_id  => $blog_id,
+                        basename => dirify($cat_label),
+                        parent   => $parent->id,
+                    });
+                }
+                
+                if ($existing_category) {
+                    $cat = $existing_category;
+                }
+                else {
+                    # No category with the existing label or basename could be found. Therefore, a new category needs to be created.
+                    $cat = create_category( $cat_label, $blog, $author, $parent );
+                    $cat_hash{ lc( $cat->label ) } = $cat;
+                }
             }
             
             # If $cat_depth is equal to the number of elements in @cats, add it
