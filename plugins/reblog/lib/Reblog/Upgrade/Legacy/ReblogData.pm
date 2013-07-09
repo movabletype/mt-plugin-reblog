@@ -17,7 +17,7 @@ __PACKAGE__->install_properties({
         'source_author'    => 'string(255)',
         'src_author'       => 'string(255)', # New column name
         'via_link'         => 'string(255)',
-        'orig_created_on'  => 'datetime not null',
+        'orig_created_on'  => 'datetime allow null',
         'src_created_on'   => 'datetime not null', # New column name
         'source'           => 'string(255)',
         'src'              => 'string(255)', # New column name
