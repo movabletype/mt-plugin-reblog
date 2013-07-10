@@ -89,80 +89,6 @@ sub validate_feed {
     return 0;
 }
 
-sub data_sourcefeedid_load {
-    print "Inserting reblog sourcefeed and blog ID data...\n";
-    my @rbds = Reblog::ReblogData->load( {} );
-    foreach my $rbd (@rbds) {
-        my $entry = MT::Entry->load( $rbd->entry_id );
-        if ( !$entry ) {
-            $rbd->blog_id(0);
-            $rbd->sourcefeed_id(0);
-            $rbd->save;
-            next;
-        }
-        my @sourcefeeds
-            = Reblog::ReblogSourcefeed->load(
-            { blog_id => $entry->blog_id, url => $rbd->source_feed_url },
-            { limit   => 1 } );
-        my $sourcefeed = pop @sourcefeeds;
-        if ($sourcefeed) {
-            $rbd->sourcefeed_id( $sourcefeed->id );
-            $rbd->blog_id( $entry->blog_id );
-            $rbd->save;
-        }
-        else {
-            $rbd->blog_id( $entry->blog_id );
-            $rbd->sourcefeed_id(0);
-            $rbd->save;
-        }
-    }
-    return 1;
-}
-
-sub sourcefeed_label_load {
-    print "Inserting reblog labels...\n";
-    use Reblog::ReblogSourcefeed;
-    my @feeds = Reblog::ReblogSourcefeed->load();
-    foreach my $feed (@feeds) {
-        if ( !$feed->label ) {
-            my $label = $feed->url;
-            $label =~ s/^http(s?):\/\///;
-            $label =~ s/\/.*//;
-            unless ($label) {
-                $label = "Feed No. " . $feed->id;
-                print "Feed with bad label: feed id " . $feed->id;
-            }
-            $feed->label($label);
-            $feed->save;
-        }
-    }
-    return 1;
-}
-
-sub initial_sourcefeed_load {
-
-    # -When updating the database-, for each blog in the system,
-    # we want to see if we can find a sourceg to insert into
-    # mt_reblog_sourcefeed
-    my @blogs = MT::Blog->load( {} );
-    foreach my $blog (@blogs) {
-        my $pref = $blog->id() . "-";
-        my $data = MT::PluginData->load(
-            { plugin => 'reblog', key => $pref . "source_rss" } );
-        if ( defined($data) && $data ) {
-            print "Inserting initial feed for blog#"
-                . $blog->id() . ": "
-                . ${ $data->data() } . "\n";
-            my $sourcefeed = new Reblog::ReblogSourcefeed;
-            $sourcefeed->blog_id( $blog->id() );
-            $sourcefeed->is_active(1);
-            $sourcefeed->url( ${ $data->data() } );
-            $sourcefeed->save();
-        }
-    }
-    return 1;
-}
-
 sub loadreblogparams {
     my ( $cb, $app, $param ) = @_;
 
@@ -173,19 +99,19 @@ sub loadreblogparams {
     $param->{'via-link'}   = $app->param('via-link')   || $reblog->via_link;
     $param->{'annotation'} = $app->param('annotation') || $reblog->annotation;
     $param->{'source-title'} = $app->param('source-title')
-        || $reblog->source_title;
+        || $reblog->src_title;
     $param->{'source-link'} = $app->param('source-link')
-        || $reblog->source_url;
+        || $reblog->src_url;
     $param->{'thumbnail-url'} = $app->param('thumbnail-url')
         || $reblog->thumbnail_url;
     $param->{'thumbnail-link'} = $app->param('thumbnail-link')
         || $reblog->thumbnail_link;
     $param->{'enclosure_url'} = $app->param('enclosure_url')
-        || $reblog->enclosure_url;
+        || $reblog->encl_url;
     $param->{'enclosure_length'} = $app->param('enclosure_length')
-        || $reblog->enclosure_length;
+        || $reblog->encl_length;
     $param->{'enclosure_type'} = $app->param('enclosure_type')
-        || $reblog->enclosure_type;
+        || $reblog->encl_type;
 
 }
 
@@ -236,15 +162,15 @@ sub reblog_save {
     $reblog = Reblog::ReblogData->load( { entry_id => $obj->id } );
 
     if ($reblog) {
-        $reblog->via_link($via_link);
-        $reblog->source_url($source_link);
-        $reblog->source_title($source_title);
-        $reblog->thumbnail_link($thumbnail_link);
-        $reblog->thumbnail_url($thumbnail_url);
-        $reblog->enclosure_url($enclosure_url);
-        $reblog->enclosure_type($enclosure_type);
-        $reblog->enclosure_length($enclosure_length);
-        $reblog->annotation($annotation);
+        $reblog->via_link(       $via_link         );
+        $reblog->src_url(        $source_link      );
+        $reblog->src_title(      $source_title     );
+        $reblog->thumbnail_link( $thumbnail_link   );
+        $reblog->thumbnail_url(  $thumbnail_url    );
+        $reblog->encl_url(       $enclosure_url    );
+        $reblog->encl_type(      $enclosure_type   );
+        $reblog->encl_length(    $enclosure_length );
+        $reblog->annotation(     $annotation       );
 
         $reblog->save;
     }
@@ -259,30 +185,28 @@ sub reblog_save {
         if ($via_link) {
             $rbd->via_link($via_link);
         }
-        $rbd->source_url($source_link);
+        $rbd->src_url($source_link);
         if ($source_title) {
-            $rbd->source_title($source_title);
+            $rbd->src_title($source_title);
         }
         else {
-            $rbd->source_title( $entry->title );
+            $rbd->src_title( $entry->title );
         }
-        $rbd->thumbnail_link($thumbnail_link);
-        $rbd->thumbnail_url($thumbnail_url);
-        $rbd->enclosure_url($enclosure_url);
-        $rbd->enclosure_length($enclosure_length);
-        $rbd->enclosure_type($enclosure_type);
-
-        $rbd->entry_id( $obj->id );
-        $rbd->orig_created_on( $entry->created_on );
-        $rbd->created_on( $entry->created_on );
-
-        $rbd->source_author( $user->nickname );
-        $rbd->link($source_link);
-        $rbd->guid( $entry->atom_id );
-        $rbd->source($source_title);
-        $rbd->source_feed_url('#');
-        $rbd->sourcefeed_id(0);
-        $rbd->blog_id( $obj->blog_id );
+        $rbd->thumbnail_link( $thumbnail_link    );
+        $rbd->thumbnail_url(  $thumbnail_url     );
+        $rbd->encl_url(       $enclosure_url     );
+        $rbd->encl_length(    $enclosure_length  );
+        $rbd->encl_type(      $enclosure_type    );
+        $rbd->entry_id(       $obj->id           );
+        $rbd->src_created_on( $entry->created_on );
+        $rbd->created_on(     $entry->created_on );
+        $rbd->src_author(     $user->nickname    );
+        $rbd->link(           $source_link       );
+        $rbd->guid(           $entry->atom_id    );
+        $rbd->src(            $source_title      );
+        $rbd->src_feed_url(   '#'                );
+        $rbd->sourcefeed_id(  0                  );
+        $rbd->blog_id(        $obj->blog_id      );
         $rbd->save;
     }
 }
@@ -559,10 +483,16 @@ sub do_import {
     use MT::Util qw( encode_html );
     use MT::WeblogPublisher;
     my ( $app, $auth, $blog, @sources ) = @_;
-    my $scheduled = 0;
-    my $pub       = MT::WeblogPublisher->new;
-    my $blog_id   = $blog->id;
-    my $plugin    = MT->component('reblog');
+
+    my $scheduled     = 0;
+    my $pub           = MT::WeblogPublisher->new;
+    my $blog_id       = $blog->id;
+    my $plugin        = MT->component('reblog');
+    my $ttl           = MT->config('ReblogCacheTTL');
+    my $wants_rebuild = $plugin->get_config_value(
+        'rebuild_individual',
+        'blog:' . $blog_id
+    );
 
     if ( $auth && $blog ) {
         $scheduled = 1;
@@ -584,23 +514,26 @@ sub do_import {
         else {
             $auth = MT::Author->load($default_author);
             unless ($auth) {
-                return $app->error('Could not load default author for blog');
+                die $app->error(
+                    'Reblog could not load a default author for this blog.'
+                );
             }
         }
     }
+
+    # Variables used to count and return the total number of entries parsed
+    # and/or updated.
     my $feedcount = 0;
+    our $nBuilt   = 0;
 
     my @sourcefeeds;
     if (@sources) {
         @sourcefeeds = @sources;
     }
     else {
-        return $app->error('No sourcefeeds selected');
+        die $app->error('No sourcefeeds selected.');
     }
-    our $nBuilt = 0;
-    my $wants_rebuild = $plugin->get_config_value( 'rebuild_individual',
-        'blog:' . $blog_id );
-    my $ttl = MT->config('ReblogCacheTTL');
+
     foreach my $sourcefeed (@sourcefeeds) {
         my (@entries);
 
@@ -615,16 +548,18 @@ sub do_import {
         }
         $feedcount++;
         $sourcefeed->has_error(0);
-        $sourcefeed->consecutive_failures(0);
-        $sourcefeed->epoch_last_read( time() );
-        $sourcefeed->save;
+        $sourcefeed->consec_fails(0);
+        $sourcefeed->last_read( time() );
+        $sourcefeed->save or die $sourcefeed->errstr;
+
         foreach my $eRec (@entries) {
             if ( $eRec->{status} ne 'old' ) {
                 $nBuilt++;
                 if ($wants_rebuild) {
                     $pub->rebuild_entry(
-                        Entry => $eRec->{entry},
-                        Blog  => $blog
+                        Entry             => $eRec->{entry},
+                        Blog              => $blog,
+                        BuildDependencies => 1,
                     );
                 }
             }
@@ -634,12 +569,13 @@ sub do_import {
 
                 # Or if it's an existing entry that has been published
                 if (   $existingEntry
-                    && $existingEntry->status == MT::Entry::RELEASE() )
-                {
+                    && $existingEntry->status == MT::Entry::RELEASE()
+                ) {
                     if ($wants_rebuild) {
                         $pub->rebuild_entry(
-                            Entry => $eRec->{entry},
-                            Blog  => $blog
+                            Entry             => $eRec->{entry},
+                            Blog              => $blog,
+                            BuildDependencies => 1,
                         );
                     }
                     $nBuilt++;
@@ -647,10 +583,7 @@ sub do_import {
             }    # /if eRec->{status} ne 'old'
         }    # /foreach eRec
     }    # / foreach $sourcefeed
-    if ( $nBuilt > 0 ) {
-        $pub->rebuild_indexes( Blog => $blog );
-        $pub->rebuild_categories( Blog => $blog );
-    }
+
     if ($scheduled) {
         Reblog::Import->error(undef);
         undef $@;
@@ -663,12 +596,12 @@ sub do_import {
             $entries = 'entry';
         }
         if ( $feedcount == 1 ) {
-            $str
-                = "$feedcount feed read successfully; $nBuilt new or updated $entries found.";
+            $str = "$feedcount feed read successfully; $nBuilt new or updated "
+                . "$entries found.";
         }
         else {
-            $str
-                = "$feedcount feeds read successfully; $nBuilt new or updated $entries found.";
+            $str = "$feedcount feeds read successfully; $nBuilt new or updated "
+                . "$entries found.";
         }
         Reblog::Import->error(undef);
         undef $@;

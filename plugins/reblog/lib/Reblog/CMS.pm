@@ -16,6 +16,8 @@ package Reblog::CMS;
 use strict;
 use warnings;
 
+# This is the blog-level Reblog configurations settings, available at
+# Manage > Reblog.
 sub config {
     my $app   = shift;
     my $perms = $app->permissions;
@@ -25,8 +27,20 @@ sub config {
     my $plugin = MT->component('reblog');
     my $tmpl   = $plugin->load_tmpl('config.tmpl');
     my $param;
-    use MT::Blog;
-    my $blog = MT::Blog->load( $app->param('blog_id') );
+
+    die $app->error('Required "blog_id" parameter is missing.')
+        if !$app->param('blog_id');
+
+    my $blog = MT->model('blog')->load( $app->param('blog_id') )
+        or die $app->error(
+            'A blog with the ID ' . $app->param('blog_id') . ' was not found.'
+        );
+
+    # This is used frequently when getting and setting plugin options. No need
+    # to keep re-building it.
+    my $blog_shortcut = 'blog:' . $blog->id;
+
+    # Save the options as specified.
     if ( $app->param('save') ) {
         my $frequency = $app->param('frequency');
         if ( !$frequency || $frequency < 15 * 60 ) {
@@ -36,12 +50,12 @@ sub config {
         $plugin->set_config_value(
             'frequency',
             $app->param('frequency'),
-            'blog:' . $blog->id
+            $blog_shortcut
         );
         $plugin->set_config_value(
             'default_author',
             $app->param('reblog_author'),
-            'blog:' . $blog->id
+            $blog_shortcut
         );
         if (   $app->param('max_failures') =~ m/^\d+$/
             && $app->param('max_failures') )
@@ -51,34 +65,42 @@ sub config {
             $plugin->set_config_value(
                 'max_failures',
                 $max_failures,
-                'blog:' . $blog->id
+                $blog_shortcut
             );
         }
         if ( $app->param('import_categories') ) {
-            $plugin->set_config_value( 'import_categories', 1,
-                'blog:' . $blog->id );
+            $plugin->set_config_value( 'import_categories', 1, $blog_shortcut );
         }
         else {
-            $plugin->set_config_value( 'import_categories', 0,
-                'blog:' . $blog->id );
+            $plugin->set_config_value( 'import_categories', 0, $blog_shortcut );
         }
+
+        if ( $app->param('import_feed_title_as_category') ) {
+            $plugin->set_config_value( 'import_feed_title_as_category', 1,
+                $blog_shortcut );
+        }
+        else {
+            $plugin->set_config_value( 'import_feed_title_as_category', 0,
+                $blog_shortcut );
+        }
+
         if ( $app->param('rebuild_individual') ) {
-            $plugin->set_config_value( 'rebuild_individual', 1,
-                'blog:' . $blog->id );
+            $plugin->set_config_value( 'rebuild_individual', 1, $blog_shortcut );
         }
         else {
-            $plugin->set_config_value( 'rebuild_individual', 0,
-                'blog:' . $blog->id );
+            $plugin->set_config_value( 'rebuild_individual', 0, $blog_shortcut );
         }
+
         if ( $app->param('display_entry_details') ) {
             $plugin->set_config_value( 'display_entry_details', 1,
-                'blog:' . $blog->id );
+                $blog_shortcut );
         }
         else {
             $plugin->set_config_value( 'display_entry_details', 0,
-                'blog:' . $blog->id );
+                $blog_shortcut );
         }
     }
+
     use MT::Author;
     my $author_iter = MT::Author->load_iter(
         {},
@@ -92,15 +114,19 @@ sub config {
     );
     my @author_loop;
     while ( my $a = $author_iter->() ) {
-        next unless ( $a->permissions($blog)->has('publish_post') );
+        next unless (
+            $a->permissions($blog)->has('publish_post')
+            || $a->can_administer()
+        );
         my $row;
-		my $shown = $a->name;
-		if ( $a->nickname ) { $shown .= ' (' . $a->nickname . ')'; }
+        my $shown = $a->name;
+        if ( $a->nickname ) { $shown .= ' (' . $a->nickname . ')'; }
         $row->{author_name} = $shown;
         $row->{author_id}   = $a->id;
         push @author_loop, $row;
     }
     $param->{author_loop}    = \@author_loop;
+
     $param->{frequency_loop} = [
         { frequency => 'Every 24 hours',   seconds => 24 * 60 * 60 },
         { frequency => 'Every 12 hours',   seconds => 12 * 60 * 60 },
@@ -109,32 +135,38 @@ sub config {
         { frequency => 'Hourly',           seconds => 60 * 60 },
         { frequency => 'Every 30 minutes', seconds => 30 * 60 },
         { frequency => 'Every 15 minutes', seconds => 15 * 60 },
-	{ frequency => 'Every 10 minutes', seconds => 10 * 60 },
-	{ frequency => 'Every 5 minutes',  seconds => 5 * 60 }
+        { frequency => 'Every 10 minutes', seconds => 10 * 60 },
+        { frequency => 'Every 5 minutes',  seconds => 5 * 60 }
     ];
-    unless ($blog) {
-        return $app->error('Blog not found');
-    }
+
     $param->{blog_name} = $blog->name;
     $param->{display_entry_details}
-        = $plugin->get_config_value( 'display_entry_details',
-        'blog:' . $blog->id );
+        = $plugin->get_config_value( 'display_entry_details', $blog_shortcut );
     $param->{default_author_id}
-        = $plugin->get_config_value( 'default_author', 'blog:' . $blog->id );
+        = $plugin->get_config_value( 'default_author', $blog_shortcut );
     $param->{default_frequency}
-        = $plugin->get_config_value( 'frequency', 'blog:' . $blog->id );
+        = $plugin->get_config_value( 'frequency', $blog_shortcut );
     $param->{default_max_failures}
-        = $plugin->get_config_value( 'max_failures', 'blog:' . $blog->id );
+        = $plugin->get_config_value( 'max_failures', $blog_shortcut );
     $param->{rebuild_individual}
-        = $plugin->get_config_value( 'rebuild_individual',
-        'blog:' . $blog->id );
+        = $plugin->get_config_value( 'rebuild_individual', $blog_shortcut );
     $param->{import_categories}
-        = $plugin->get_config_value( 'import_categories',
-        'blog:' . $blog->id );
+        = $plugin->get_config_value( 'import_categories', $blog_shortcut );
+    $param->{import_feed_title_as_category}
+        = $plugin->get_config_value(
+            'import_feed_title_as_category',
+            $blog_shortcut
+        );
+
+    # Status messaging.
+    $param->{saved} = $app->param('save');
 
     $app->build_page( $tmpl, $param );
 }
 
+# On the Manage Sourcefeeds screen is an Import list action/button that will
+# allow admins to import the selected sourcefeeds, creating entries,
+# republishing, etc.
 sub import_sourcefeeds {
     my $app = shift;
     $app->validate_magic() or return;
@@ -173,6 +205,7 @@ sub import_sourcefeeds {
     $app->build_page( $tmpl, $param );
 }
 
+# Save the sourcefeed, from the Edit Sourcefeed screen.
 sub save_sourcefeed {
     my $app   = shift;
     my $perms = $app->permissions;
@@ -205,11 +238,12 @@ sub cms_sourcefeed_presave_callback {
     }
     if ( $app->param('clear_errors') ) {
         $feed->has_error(0);
-        $feed->consecutive_failures(0);
+        $feed->consec_fails(0);
     }
     return 1;
 }
 
+# The sourcefeed list view, availabe at Manage > Sourcefeeds.
 sub list_sourcefeeds {
     use Reblog::ReblogSourcefeed;
     my ($app) = @_;
@@ -235,6 +269,10 @@ sub list_sourcefeeds {
     );
 }
 
+# When on the Edit Sourcefeed screen, there's a "Validate" button to validate
+# the URL entered, to help ensure Reblog will work. Clicking that Validate
+# button calls this method, which returns an AJAX response to be displayed
+# inline.
 sub validate_json {
     use Reblog::Util;
     use JSON;
@@ -288,6 +326,7 @@ sub validate_json {
     1;
 }
 
+# The Edit Sourcefeed screen.
 sub edit_sourcefeed {
     my $app   = shift;
     my $perms = $app->permissions;
@@ -331,6 +370,7 @@ sub edit_sourcefeed {
     $app->build_page( $tmpl, \%param );
 }
 
+# Called by CMSPostSave.entry
 sub reblog_save {
     my ( $cb, $app, $obj ) = @_;
     my $plugin = MT->component('reblog');
@@ -359,15 +399,15 @@ sub reblog_save {
     my $reblog = Reblog::ReblogData->load( { entry_id => $obj->id } );
 
     if ($reblog) {
-        $reblog->via_link($via_link);
-        $reblog->source_url($source_link);
-        $reblog->source_title($source_title);
-        $reblog->thumbnail_link($thumbnail_link);
-        $reblog->thumbnail_url($thumbnail_url);
-        $reblog->enclosure_url($enclosure_url);
-        $reblog->enclosure_type($enclosure_type);
-        $reblog->enclosure_length($enclosure_length);
-        $reblog->annotation($annotation);
+        $reblog->via_link(       $via_link         );
+        $reblog->src_url(        $source_link      );
+        $reblog->src_title(      $source_title     );
+        $reblog->thumbnail_link( $thumbnail_link   );
+        $reblog->thumbnail_url(  $thumbnail_url    );
+        $reblog->encl_url(       $enclosure_url    );
+        $reblog->encl_type(      $enclosure_type   );
+        $reblog->encl_length(    $enclosure_length );
+        $reblog->annotation(     $annotation       );
 
         $reblog->save;
     }
@@ -382,34 +422,36 @@ sub reblog_save {
         if ($via_link) {
             $rbd->via_link($via_link);
         }
-        $rbd->source_url($source_link);
+        $rbd->src_url($source_link);
         if ($source_title) {
-            $rbd->source_title($source_title);
+            $rbd->src_title($source_title);
         }
         else {
-            $rbd->source_title( $entry->title );
+            $rbd->src_title( $entry->title );
         }
-        $rbd->thumbnail_link($thumbnail_link);
-        $rbd->thumbnail_url($thumbnail_url);
-        $rbd->enclosure_url($enclosure_url);
-        $rbd->enclosure_length($enclosure_length);
-        $rbd->enclosure_type($enclosure_type);
-        $rbd->entry_id( $obj->id );
-        $rbd->orig_created_on( $entry->created_on );
-        $rbd->created_on( $entry->created_on );
+        $rbd->thumbnail_link( $thumbnail_link    );
+        $rbd->thumbnail_url(  $thumbnail_url     );
+        $rbd->encl_url(       $enclosure_url     );
+        $rbd->encl_length(    $enclosure_length  );
+        $rbd->encl_type(      $enclosure_type    );
+        $rbd->entry_id(       $obj->id           );
+        $rbd->src_created_on( $entry->created_on );
+        $rbd->created_on(     $entry->created_on );
 
         # TODO - not obviously exposed in app
-        $rbd->source_author( $user->nickname );
-        $rbd->link($source_link);
-        $rbd->guid( $entry->atom_id );
-        $rbd->source($source_title);
-        $rbd->source_feed_url('#');
-        $rbd->sourcefeed_id(0);
-        $rbd->blog_id($blogid);
+        $rbd->src_author(    $user->nickname );
+        $rbd->link(          $source_link    );
+        $rbd->guid(          $entry->atom_id );
+        $rbd->src(           $source_title   );
+        $rbd->src_feed_url(  '#'             );
+        $rbd->sourcefeed_id( 0               );
+        $rbd->blog_id(       $blogid         );
         $rbd->save;
     }
 }
 
+# The Manage Reblog configuration screen (at Manage > Reblog) saves it's values
+# to the blog-level plugindata object, just like plugin Settings.
 sub save_config {    # Translate default author's author_name into author id
     my $plugin = shift;
     my ( $param, $scope ) = @_;
@@ -477,21 +519,31 @@ sub inline_edit_entry {
     }
     else {
         $addition->param( ANNOTATION     => $reblog_data->annotation );
-        $addition->param( SOURCE_TITLE   => $reblog_data->source_title );
-        $addition->param( SOURCE_LINK    => $reblog_data->source_url );
+        $addition->param( SOURCE_TITLE   => $reblog_data->src_title );
+        $addition->param( SOURCE_LINK    => $reblog_data->src_url );
         $addition->param( VIA_LINK       => $reblog_data->via_link );
         $addition->param( THUMBNAIL_LINK => $reblog_data->thumbnail_link );
         $addition->param( THUMBNAIL_URL  => $reblog_data->thumbnail_url );
-        $addition->param( ENCLOSURE_URL  => $reblog_data->enclosure_url );
+        $addition->param( ENCLOSURE_URL  => $reblog_data->encl_url );
     }
     $reblog_setting->innerHTML( $addition->output );
     my $keywords_field = $tmpl->getElementById('keywords');
     $tmpl->insertAfter( $reblog_setting, $keywords_field );
 }
 
+# On each screen in Reblog, permissions are check to see if the user has
+# adequate permission to do what they're trying to do.
 sub check_perms {
     my ( $perms, $author, $type ) = @_;
     my $plugin = MT->component('reblog');
+    my $app    = MT->instance;
+
+    # If the user has moved from the blog level to the system level, be sure to
+    # redirect them to the dashboard.
+    if (!$app->blog) {
+        return $app->redirect($app->mt_uri . '?__mode=dashboard&blog_id=0');
+    }
+
     unless ( $perms && $author && $type ) {
         return;
     }
@@ -511,6 +563,8 @@ sub check_perms {
     }
 }
 
+# The menu condition to check if the user in context has adequate permission to
+# view the Tools > Reblog Configuration menu item.
 sub menu_permission_reblog {
     my $app = MT->instance;
     unless ($app) {
@@ -532,7 +586,21 @@ sub menu_permission_reblog {
     }
 }
 
-sub menu_permission_sourcefeeds {
+# The menu condition to check if the user in context has adequate permission to
+# view the Tools > Reblog Sourcefeeds menu item. Check for the required version
+# of MT first, then consider permissions.
+sub menu_permission_sourcefeeds_mt5 {
+    return 0 if MT->product_version =~ /^4/; # MT5 only
+    return _menu_permission_sourcefeeds();
+}
+
+sub menu_permission_sourcefeeds_mt4 {
+    return 0 if MT->product_version =~ /^5/; # MT5 only
+    return _menu_permission_sourcefeeds();
+}
+
+# Called by the version-specific check, above.
+sub _menu_permission_sourcefeeds {
     my $app = MT->instance;
     unless ($app) {
         return 0;

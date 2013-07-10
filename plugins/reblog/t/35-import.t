@@ -99,15 +99,15 @@ is ( $rb_data->blog_id, 1, 'ReblogData blog_id set correctly');
 is ( $rb_data->link, 'http://www.movabletype.org/2008/12/facebook_connect_for_movable_type.html', 'ReblogData link set correctly');
 is ( $rb_data->guid, 'tag:www.movabletype.org,2008://2.11641', 'ReblogData guid set correctly');
 is ( $rb_data->via_link, $rb_data->link, 'ReblogData via_link defaults to link');
-is ( $rb_data->orig_created_on, $entry->authored_on, 'ReblogData orig_created_on set correctly');
-is ( $rb_data->source_author, 'Chris Ernest Hall', 'ReblogData source_author set correctly');
-is ( $rb_data->source, 'MovableType.org - Home for the MT Community', 'ReblogData source set correctly');
-is ( $rb_data->source_url, 'http://www.movabletype.org/', 'ReblogData source_url set correctly');
-is ( $rb_data->source_feed_url, MT->model('ReblogSourcefeed')->load(1)->url, 'ReblogData source_feed_url set correctly');
-is ( $rb_data->source_title, 'Facebook Connect for Movable Type', 'ReblogData source_title set correctly');
-is ( $rb_data->enclosure_url, 'http://example.org/audio/podcast.mp3', 'ReblogData enclosure url set correctly' );
-is ( $rb_data->enclosure_length, 1337, 'ReblogData enclosure length set correctly' );
-is ( $rb_data->enclosure_type, 'audio/mpeg', 'ReblogData enclosure type set correctly' );
+is ( $rb_data->src_created_on, $entry->authored_on, 'ReblogData src_created_on set correctly');
+is ( $rb_data->src_author, 'Chris Ernest Hall', 'ReblogData source_author set correctly');
+is ( $rb_data->src, 'MovableType.org - Home for the MT Community', 'ReblogData source set correctly');
+is ( $rb_data->src_url, 'http://www.movabletype.org/', 'ReblogData source_url set correctly');
+is ( $rb_data->src_feed_url, MT->model('ReblogSourcefeed')->load(1)->url, 'ReblogData source_feed_url set correctly');
+is ( $rb_data->src_title, 'Facebook Connect for Movable Type', 'ReblogData source_title set correctly');
+is ( $rb_data->encl_url, 'http://example.org/audio/podcast.mp3', 'ReblogData enclosure url set correctly' );
+is ( $rb_data->encl_length, 1337, 'ReblogData enclosure length set correctly' );
+is ( $rb_data->encl_type, 'audio/mpeg', 'ReblogData enclosure type set correctly' );
 
 $plugin->set_config_value('import_categories', 0, 'blog:1');
 

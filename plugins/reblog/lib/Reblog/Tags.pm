@@ -17,6 +17,7 @@ use strict;
 use warnings;
 use Switch;
 
+# IfReblog block tag
 sub _hdlr_if_reblog {
     my ( $ctx, $args ) = @_;
     my ( $blog, $blog_id );
@@ -35,6 +36,7 @@ sub _hdlr_if_reblog {
     return scalar @sf;
 }
 
+# IfNotReblog block tag
 sub _hdlr_if_not_reblog {
     my ( $ctx, $args ) = @_;
     my ( $blog, $blog_id );
@@ -53,6 +55,7 @@ sub _hdlr_if_not_reblog {
     return ( !scalar @sf );
 }
 
+# EntryIfReblog block tag
 sub _hdlr_entry_if_reblog {
     my ( $ctx, $args ) = @_;
 
@@ -65,6 +68,7 @@ sub _hdlr_entry_if_reblog {
     return defined($rbd) && $rbd->id;
 }
 
+# EntryIfHasReblogAuthor block tag
 sub _hdlr_entry_if_has_reblog_author {
     my ( $ctx, $args ) = @_;
 
@@ -74,9 +78,10 @@ sub _hdlr_entry_if_has_reblog_author {
     require Reblog::ReblogData;
     my $rbd = Reblog::ReblogData->load( { entry_id => $entry->id } )
         or return '';
-    return defined($rbd) && $rbd && $rbd->source_author;
+    return defined($rbd) && $rbd && $rbd->src_author;
 }
 
+# EntryReblogSource function tag
 sub _hdlr_entry_reblog_source {
     my ( $ctx, $args ) = @_;
 
@@ -86,9 +91,10 @@ sub _hdlr_entry_reblog_source {
     require Reblog::ReblogData;
     my $rbd = Reblog::ReblogData->load( { entry_id => $entry->id } )
         or return '';
-    defined($rbd) && $rbd && $rbd->source ? $rbd->source : '';
+    defined($rbd) && $rbd && $rbd->src ? $rbd->src : '';
 }
 
+# EntryReblogSourceURL and EntryReblogSourceLink function tags
 sub _hdlr_entry_reblog_source_url {
     my ( $ctx, $args ) = @_;
 
@@ -98,9 +104,10 @@ sub _hdlr_entry_reblog_source_url {
     require Reblog::ReblogData;
     my $rbd = Reblog::ReblogData->load( { entry_id => $entry->id } )
         or return '';
-    defined($rbd) && $rbd && $rbd->source_url ? $rbd->source_url : '';
+    defined($rbd) && $rbd && $rbd->src_url ? $rbd->src_url : '';
 }
 
+# EntryReblogSourceFeedURL and EntryReblogSourceLinkXML function tags
 sub _hdlr_entry_reblog_source_feed_url {
     my ( $ctx, $args ) = @_;
 
@@ -112,9 +119,10 @@ sub _hdlr_entry_reblog_source_feed_url {
         or return '';
     defined($rbd)
         && $rbd
-        && $rbd->source_feed_url ? $rbd->source_feed_url : '';
+        && $rbd->src_feed_url ? $rbd->src_feed_url : '';
 }
 
+# EntryReblogLink function tag
 sub _hdlr_entry_reblog_link {
     my ( $ctx, $args ) = @_;
 
@@ -127,6 +135,7 @@ sub _hdlr_entry_reblog_link {
     defined($rbd) && $rbd ? $rbd->link : '';
 }
 
+# EntryReblogSourcefeedID function tag
 sub _hdlr_entry_reblog_sourcefeed_id {
     my ( $ctx, $args ) = @_;
 
@@ -139,6 +148,7 @@ sub _hdlr_entry_reblog_sourcefeed_id {
     defined($rbd) && $rbd ? $rbd->sourcefeed_id : '';
 }
 
+# EntryReblogViaLink function tag
 sub _hdlr_entry_reblog_via_link {
     my ( $ctx, $args ) = @_;
 
@@ -151,6 +161,7 @@ sub _hdlr_entry_reblog_via_link {
     defined($rbd) && $rbd ? $rbd->via_link ? $rbd->via_link : '' : '';
 }
 
+# EntryReblogSourcePublishedDate function tag
 sub _hdlr_entry_reblog_orig_date {
     my ( $ctx, $args ) = @_;
 
@@ -165,10 +176,10 @@ sub _hdlr_entry_reblog_orig_date {
     eval {
         $args->{ts}
             = (
-            $rbd ? MT::Object->driver()->db2ts( $rbd->orig_created_on ) : 0 );
+            $rbd ? MT::Object->driver()->db2ts( $rbd->src_created_on ) : 0 );
     };
     if ($@) {
-        $args->{ts} = $rbd->orig_created_on;
+        $args->{ts} = $rbd->src_created_on;
     }
 
     defined($rbd) && $rbd
@@ -176,6 +187,7 @@ sub _hdlr_entry_reblog_orig_date {
         : '';
 }
 
+# EntryReblogSourceAuthor and EntryReblogAuthor function tags
 sub _hdlr_entry_reblog_source_author {
     my ( $ctx, $args ) = @_;
 
@@ -185,9 +197,10 @@ sub _hdlr_entry_reblog_source_author {
     require Reblog::ReblogData;
     my $rbd = Reblog::ReblogData->load( { entry_id => $entry->id } )
         or return '';
-    defined($rbd) && $rbd ? $rbd->source_author : '';
+    defined($rbd) && $rbd ? $rbd->src_author : '';
 }
 
+# EntryReblogIdentifier function tag
 sub _hdlr_entry_reblog_identifier {
     my ( $ctx, $args ) = @_;
 
@@ -201,6 +214,7 @@ sub _hdlr_entry_reblog_identifier {
     defined($rbd) && $rbd ? $rbd->guid : '';
 }
 
+# EntryReblogThumbnailImg function tag
 sub _hdlr_entry_reblog_thumbnail_url {
     my $ctx    = shift;
     my $args   = shift;
@@ -211,6 +225,7 @@ sub _hdlr_entry_reblog_thumbnail_url {
         : return '';
 }
 
+# EntryReblogThumnbailLink function tag
 sub _hdlr_entry_reblog_thumbnail_link {
     my $ctx    = shift;
     my $args   = shift;
@@ -221,16 +236,18 @@ sub _hdlr_entry_reblog_thumbnail_link {
         : return '#';
 }
 
+# EntryReblogSourceTitle function tag
 sub _hdlr_entry_reblog_orig_source_title {
     my $ctx    = shift;
     my $args   = shift;
     my $e      = $ctx->stash('entry') or return;
     my $reblog = Reblog::ReblogData->load( { entry_id => $e->id } );
-    ( $reblog && $reblog->source_title )
-        ? return $reblog->source_title
+    ( $reblog && $reblog->src_title )
+        ? return $reblog->src_title
         : return '';
 }
 
+# EntryReblogAnnotation function tag
 sub _hdlr_entry_reblog_annotation {
     my $ctx    = shift;
     my $args   = shift;
@@ -241,6 +258,7 @@ sub _hdlr_entry_reblog_annotation {
         : return '';
 }
 
+# Not used: EntryReblogFavicon (?) function tag
 sub _hdlr_entry_reblog_favicon {
     my $ctx    = shift;
     my $args   = shift;
@@ -253,62 +271,66 @@ sub _hdlr_entry_reblog_favicon {
         : return '';
 }
 
+# EntryReblogEnclosure function tag
 sub _hdlr_entry_reblog_enclosure {
     my $ctx    = shift;
     my $args   = shift;
     my $e      = $ctx->stash('entry') or return;
     my $reblog = Reblog::ReblogData->load( { entry_id => $e->id } );
 
-    if ( $reblog && $reblog->enclosure_url ) {
-        return $reblog->enclosure_url;
+    if ( $reblog && $reblog->encl_url ) {
+        return $reblog->encl_url;
     }
     else {
         return '';
     }
 }
 
+# EntryReblogEnclosureMimeType function tag
 sub _hdlr_entry_reblog_enclosure_mimetype {
     my $ctx    = shift;
     my $args   = shift;
     my $e      = $ctx->stash('entry') or return;
     my $reblog = Reblog::ReblogData->load( { entry_id => $e->id } );
 
-    if ( $reblog && $reblog->enclosure_url ) {
-        return $reblog->enclosure_type;
+    if ( $reblog && $reblog->encl_url ) {
+        return $reblog->encl_type;
     }
     else {
         return '';
     }
 }
 
+# EntryReblogEnclosureLength function tag
 sub _hdlr_entry_reblog_enclosure_length {
     my $ctx    = shift;
     my $args   = shift;
     my $e      = $ctx->stash('entry') or return;
     my $reblog = Reblog::ReblogData->load( { entry_id => $e->id } );
 
-    if ( $reblog && $reblog->enclosure_length ) {
-        return $reblog->enclosure_length;
+    if ( $reblog && $reblog->encl_length ) {
+        return $reblog->encl_length;
     }
     elsif ($reblog) {
         require LWP::UserAgent;
         my $ua      = LWP::UserAgent->new();
-        my $headers = $ua->head( $reblog->enclosure_url );
+        my $headers = $ua->head( $reblog->encl_url );
         if ( $headers && $headers->content_length ) {
-            $reblog->enclosure_length( $headers->content_length );
+            $reblog->encl_length( $headers->content_length );
         }
         else {
-            $reblog->enclosure_length(-1)
+            $reblog->encl_length(-1)
                 ;  # set it to a nonzero value so we don't try to get it again
         }
         $reblog->save;
-        return $reblog->enclosure_length;
+        return $reblog->encl_length;
     }
     else {
         return '';
     }
 }
 
+# ReblogEnclosureEntries block tag
 sub _hdlr_reblog_enclosure_entries {
     my ( $ctx, $args, $cond ) = @_;
 
@@ -323,7 +345,7 @@ sub _hdlr_reblog_enclosure_entries {
 
     @entries = grep {
         my $rdb = Reblog::ReblogData->load( { entry_id => $_->id } );
-        $rdb->enclosure_url;
+        $rdb->encl_url;
     } @entries;
 
     return '' if ( !scalar @entries );
@@ -338,6 +360,7 @@ sub _hdlr_reblog_enclosure_entries {
     return $out;
 }
 
+# ReblogEntries block tag
 sub _hdlr_reblog_entries {
     my ( $ctx, $args, $cond ) = @_;
     my ( $limit, $offset );
@@ -352,7 +375,7 @@ sub _hdlr_reblog_entries {
     $offset = $args->{offset} ? $args->{offset} : 0;
 
     my %query_args;
-    $query_args{'sort'}      = 'orig_created_on';
+    $query_args{'sort'}      = 'src_created_on';
     $query_args{'direction'} = 'descend';
     $query_args{'offset'}    = $offset;
 
@@ -436,6 +459,7 @@ sub _hdlr_reblog_entries {
     $res;
 }
 
+# ReblogSourcefeeds block tag
 sub _hdlr_reblog_sourcefeeds {
     my ( $ctx, $args, $cond ) = @_;
 
@@ -474,8 +498,8 @@ sub _hdlr_reblog_sourcefeeds {
             = Reblog::ReblogData->load( { sourcefeed_id => $sourcefeed->id },
             { limit => 1 } );
         if ($last) {
-            $title = $last->source;
-            $url   = $last->source_url;
+            $title = $last->src;
+            $url   = $last->src_url;
         }
         push @sources,
             {
@@ -523,7 +547,7 @@ sub _hdlr_reblog_sourcefeeds {
                     return -1 if ( !defined $b->[1] );
                     $a->[1] <=> $b->[1]
                     }
-                    map { [ $_, $_->{sourcefeed}->epoch_last_read ] } @slice;
+                    map { [ $_, $_->{sourcefeed}->last_read ] } @slice;
             }
         }
     }
@@ -545,12 +569,14 @@ sub _hdlr_reblog_sourcefeeds {
     return $res;
 }
 
+# ReblogSourceURL and ReblogSourceLink function tags
 sub _hdlr_reblog_source_url {
     my $ctx = shift;
     my $f   = $ctx->stash('reblog_source');
     return $f->{url} ? $f->{url} : '';
 }
 
+# Not used: ReblogSourceFavicon (?) function tag
 sub _hdlr_reblog_source_favicon {
     my $ctx = shift;
     my $f   = $ctx->stash('reblog_source');
@@ -560,30 +586,35 @@ sub _hdlr_reblog_source_favicon {
     return $sf->favicon_url;
 }
 
+# ReblogSourceFeedURL and ReblogSourceXMLLink function tags
 sub _hdlr_reblog_source_feed_url {
     my $ctx = shift;
     my $f   = $ctx->stash('reblog_source');
     return $f->{feed_url} ? $f->{feed_url} : '';
 }
 
+# ReblogSourceID function tag
 sub _hdlr_reblog_source_id {
     my $ctx = shift;
     my $f   = $ctx->stash('reblog_source');
     return $f->{id} ? $f->{id} : '';
 }
 
+# ReblogSource function tag
 sub _hdlr_reblog_source {
     my $ctx = shift;
     my $f   = $ctx->stash('reblog_source');
     return $f->{title} ? $f->{title} : '';
 }
 
+# ReblogSourceLabel function tag
 sub _hdlr_reblog_label {
     my $ctx = shift;
     my $f   = $ctx->stash('reblog_source');
     return $f->{label} ? $f->{label} : '';
 }
 
+# Not used: ReblogFaviconURL (?) function tag
 sub _hdlr_reblog_favicon {
     my $ctx  = shift;
     my $args = shift;
