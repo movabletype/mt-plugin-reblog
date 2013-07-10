@@ -110,7 +110,7 @@ sub bad_sourcefeed {
     $source_feed = $f;
     $source_error = $e;
 }
-while ( $bad_feed->consecutive_failures < $max_fails - 1 ) {
+while ( $bad_feed->consec_fails < $max_fails - 1 ) {
     my $import
         = Reblog::Util::do_import( $app, '', $blog, ( $bad_feed ) );
 }

@@ -25,7 +25,7 @@ use Date::Parse;
 
 use MT::Author;
 use MT::Blog;
-use MT::Util qw( format_ts offset_time_list offset_time ts2epoch epoch2ts );
+use MT::Util qw( offset_time ts2epoch epoch2ts dirify );
 
 use URI::Fetch;
 use XML::XPath;
@@ -63,23 +63,44 @@ sub iso2dt {
 }
 
 sub assign_categories {
-    my ( $entry, $blog, $author, $subjects ) = @_;
-    my $res    = [];
-    my $plugin = MT->component('reblog');
-    my $import_categories;
-    
-    # Load the Plugin setting that determines if categories are to be created based on
-    # the metadata in the entries appearing in the feed.
-    $import_categories = $plugin->get_config_value( 'import_categories',
-        'blog:' . $blog->id );
-    
-    # Exit this subroutine if the configuration doesn't require categories to be created.
-    unless ($import_categories) {
+    my ($arg_ref) = @_;
+    my $entry      = $arg_ref->{entry};
+    my $blog       = $arg_ref->{blog};
+    my $author     = $arg_ref->{author};
+    my $categories = $arg_ref->{cats};
+    my $feed_title = $arg_ref->{feed_title};
+
+    my $res     = [];
+    my $plugin  = MT->component('reblog');
+    my $blog_id = $blog->id;
+
+    # Load the Plugin setting that determines if categories are to be created
+    # based on the metadata in the entries appearing in the feed.
+    my $import_categories = $plugin->get_config_value( 'import_categories',
+        'blog:' . $blog_id );
+    my $feed_title_to_cat = $plugin->get_config_value(
+        'import_feed_title_as_category',
+        'blog:' . $blog_id
+    );
+
+    # Exit this subroutine if the configuration doesn't require categories to
+    # be created.
+    unless ($import_categories || $feed_title_to_cat) {
         return $res;
     }
-    
+
+    # Create a string of whatever categories are needed based on the
+    # configuration selections.
+    my @saved_cats;
+    push @saved_cats, $feed_title
+        if $feed_title_to_cat;
+    push @saved_cats, $categories
+        if $import_categories;
+
+    my $saved_categories = join( SPLIT_TOKEN, @saved_cats);
+
     # Load the categories that already exist in this blog into @cats.
-    my (@cats) = MT::Category->load( { blog_id => $blog->id } );
+    my (@cats) = MT::Category->load( { blog_id => $blog_id } );
     my ( $cat, $place );
 
     # Create %cat_hash with Category label keys.
@@ -97,56 +118,87 @@ sub assign_categories {
     foreach $place (@placements) {
         $place_hash{ $place->category_id } = $place;
     }
-    
-    # Break the subjects up into individual array elements in @subs.
+
+    # Break the categories up into individual array elements in @subs.
     my @subs;
-    ($subjects) && ( @subs = split( SPLIT_TOKEN, $subjects ) );
-    
-    # Iterate through the subjects in @subs.
+    ($saved_categories) && ( @subs = split( SPLIT_TOKEN, $saved_categories ) );
+
+    # Iterate through the categories in @subs.
     my $primary = 0;
-    
+
     foreach my $sub (@subs) {
 
         # Break up this subject into Category labels.
         (@cats) = split( /\:\:/, $sub );
         
-        # $parent is set to 0 at this stage because this is either the only category label
-        # or the first category label in a hierarchy that's being processed.
+        # $parent is set to 0 at this stage because this is either the only
+        # category label or the first category label in a hierarchy that's
+        # being processed.
         
-        # $cat_depth represents the place in the Category label hierarchy we are currently processing.
-        # If $cat_depth == $#cats, then the category belongs in the $place_hash shown below.
+        # $cat_depth represents the place in the Category label hierarchy we
+        # are currently processing. If $cat_depth == $#cats, then the category
+        # belongs in the $place_hash shown below.
         my $parent = 0;
         my $cat_depth = 0;
         
         # Iterate through the Category labels.
         foreach my $cat_label (@cats) {
             $cat_label =~ s/\+/ /igs;
-            
             my ($existing_category);
-            
-            # If $parent is not set, attempt to load the Category according to its label.
-            # If $parent is set, attempt to load the Category according to its label as a subcategory of $parent->id.
+
+            # If $parent is not set, attempt to load the Category according to
+            # its label. If $parent is set, attempt to load the Category
+            # according to its label as a subcategory of $parent->id.
             if ($parent == 0) {
-                $existing_category = MT::Category->load( { blog_id => $blog->id, label => $cat_label } );
+                $existing_category = MT::Category->load({
+                    blog_id => $blog_id,
+                    label   => $cat_label,
+                });
             } else {
-                $existing_category = MT::Category->load( { blog_id => $blog->id, label => $cat_label, parent => $parent->id } );
+                $existing_category = MT::Category->load({
+                    blog_id => $blog_id,
+                    label   => $cat_label,
+                    parent  => $parent->id,
+                });
             }
-            
-            # If the Category exists already, assign it to $cat,
-            # otherwise create the category, assign it to $cat, and add it to the $cat_hash.
+
+            # If the Category exists already, assign it to $cat, otherwise
+            # create the category, assign it to $cat, and add it to the
+            # $cat_hash.
             if ($existing_category) {
                 $cat = $existing_category;
             } else {
-                $cat = create_category( $cat_label, $blog, $author, $parent );
-                $cat_hash{ lc( $cat->label ) } = $cat;
+
+                # Try harder to find a matching category with a basename match.
+                if ($parent == 0) {
+                    $existing_category = MT::Category->load({
+                        blog_id  => $blog_id,
+                        basename => dirify($cat_label),
+                    });
+                } else {
+                    $existing_category = MT::Category->load({
+                        blog_id  => $blog_id,
+                        basename => dirify($cat_label),
+                        parent   => $parent->id,
+                    });
+                }
+                
+                if ($existing_category) {
+                    $cat = $existing_category;
+                }
+                else {
+                    # No category with the existing label or basename could be found. Therefore, a new category needs to be created.
+                    $cat = create_category( $cat_label, $blog, $author, $parent );
+                    $cat_hash{ lc( $cat->label ) } = $cat;
+                }
             }
             
-            # If $cat_depth is equal to the number of elements in @cats, add it to the
-            # $place_hash if it doesn't already exist.
+            # If $cat_depth is equal to the number of elements in @cats, add it
+            # to the $place_hash if it doesn't already exist.
             #
-            # When $cat_depth == $#cats, this means that the Category was specified in
-            # the subjects and isn't just a parent category that needed to be created because
-            # it didn't exist.
+            # When $cat_depth == $#cats, this means that the Category was
+            # specified in the $categories and isn't just a parent category that
+            # needed to be created because it didn't exist.
             if ( $cat_depth == $#cats ) {
                 if ( exists( $place_hash{ $cat->id } ) ) {
                     $place = $place_hash{ $cat->id };
@@ -155,16 +207,17 @@ sub assign_categories {
                     $place = create_placement( $entry, $cat, 0 );
                     $place_hash{ $cat->id } = $place;
                 }
-                
+
                 # If there is no Primary Category yet, set it to this Category.
                 if ( !$primary ) {
                     $primary = $place;
                     $primary->is_primary(1);
-                    $primary->save();
+                    $primary->save() or die $primary->errstr;
                 }
             }
             
-            # Set the current Category to be the parent, add it to @res, and bump $cat_depth.            
+            # Set the current Category to be the parent, add it to @res, and
+            # bump $cat_depth.
             $parent = $cat;
             push( @$res, $cat );
             $cat_depth++;
@@ -178,28 +231,31 @@ sub assign_categories {
         $curr_cats{ $cat->id } = $cat;
     }
 
-    # Iterate through %place_hash, making sure that each placement exists in $curr_cats.
+    # Iterate through %place_hash, making sure that each placement exists in
+    # $curr_cats.
     foreach $place ( values %place_hash ) {
         if ( !exists( $curr_cats{ $place->category_id } ) ) {
-            $place->remove();
+            $place->remove() or die $place->errstr;
         }
     }
 
-    # If the Primary Category isn't designated already, set it to the first Category listed
-    # on the entry in the feed.
+    # If the Primary Category isn't designated already, set it to the first
+    # Category listed on the entry in the feed.
     if ( !$primary && scalar(@$res) > 0 ) {
         my @vals = values(%place_hash); 
         $primary = $place_hash{ $vals[0] };
         $primary->is_primary(1);
-        $primary->save();
+        $primary->save() or die $primary->errstr;
     }
 
     # Return the data structure representing the Categories.
     return $res;
 }
 
+# When importing, if a category doesn't exist it should be created.
 sub create_category {
     my ( $label, $blog, $author, $parent ) = @_;
+
     my $author_id;
     if ( $author == -1 ) {
         $author_id = 0;
@@ -207,14 +263,28 @@ sub create_category {
     else {
         $author_id = $author->id;
     }
+
     my $cat = MT::Category->new();
+    my $original = $cat->clone;
+
     $cat->blog_id( $blog->id );
     $cat->allow_pings( $blog->allow_pings_default );
     $cat->label($label);
     $cat->author_id($author_id);
     $cat->parent( ( $parent ? $parent->id : 0 ) );
 
-    $cat->save();
+    $cat->save() or die $cat->errstr;
+
+    MT->log({
+       message => MT->translate(
+            "Category '[_1]' created by '[_2]'", $cat->label,
+            $author->name
+        ),
+        level    => MT::Log::INFO(),
+        class    => 'category',
+        category => 'new',
+    });
+
     return MT::Category->load( $cat->id );
 }
 
@@ -226,7 +296,7 @@ sub create_placement {
     $place->blog_id( $entry->blog_id );
     $place->category_id( $cat->id );
     $place->is_primary($is_primary);
-    $place->save();
+    $place->save() or die $place->errstr;
 
     return MT::Placement->load( $place->id );
 }
@@ -234,14 +304,18 @@ sub create_placement {
 sub import_entries {
     my $class = shift;
     my ( $sourcefeed, $args ) = @_;
+    my $app = MT->instance;
+
     my ( $blog_id, $author, $suppress, $cache_ttl );
     $blog_id   = $args->{blog_id};
     $author    = $args->{author};
     $suppress  = $args->{suppress};
     $cache_ttl = $args->{cache_ttl};
+
     unless ( $cache_ttl && $cache_ttl =~ m|^\d+$| ) {
         $cache_ttl ||= 15 * 60;
     }
+
     my $author_id;
     my ( $blog, $cache, $source_rss );
     my $config = MT::ConfigMgr->instance;
@@ -265,9 +339,9 @@ sub import_entries {
         $source_rss = $sourcefeed->url;
         $blog       = MT::Blog->load($blog_id);
 
-        # Someday perhaps we can have config directives
-        # allowing us to choose between MT::Cache::Negotiate,
-        # MT::Cache::Null, and a file-based caching system
+        # Someday perhaps we can have config directives allowing us to choose
+        # between MT::Cache::Negotiate, MT::Cache::Null, and a file-based
+        # caching system
         use MT::Cache::Negotiate;
         $cache = MT::Cache::Negotiate->new( ttl => $cache_ttl );
     }
@@ -463,7 +537,7 @@ sub import_entries {
             my $summary
                 = &_clean_html( $xp->findvalue( $map->{'summary'}, $node ) );
 
-         # it may not be in the map hash, so if there's no value, that's okay.
+            # it may not be in the map hash, so if there's no value, that's OK.
             my $modifiedTime = $xp->findvalue( 'updated', $node );
 
             # Tricky to get the enclosures tag because it has no value,
@@ -561,8 +635,8 @@ sub import_entries {
 
             my $entry;
 
-          # If we're updating an old reblogged row, we need this entry but
-          # can't use MT::Object join for this circumstance, so do it manually
+            # If we're updating an old reblogged row, we need this entry but
+            # can't use MT::Object join for this circumstance, so do it manually
             my (@rb_data) = Reblog::ReblogData->load( { guid => "$guid" },
                 { sort => 'created_on', direction => 'ascend' } );
             my $rb_data;
@@ -570,9 +644,6 @@ sub import_entries {
                 $entry = MT::Entry->load(
                     { id => $rbd->entry_id, blog_id => $blog_id } );
                 if ($entry) {
-
-                    my $tempCatRef = $entry->category;
-                    my @categories = keys(%$tempCatRef);
                     $rb_data = $rbd;
                 }
             }
@@ -583,23 +654,22 @@ sub import_entries {
             }
 
             $rb_data->sourcefeed_id( $sourcefeed->id );
-            $rb_data->blog_id( $sourcefeed->blog_id );
-            $rb_data->link($link);
-            $rb_data->guid($guid);
-            $rb_data->via_link($via_link);
-            $rb_data->orig_created_on($orig_date);
-            $rb_data->source_author($source_author);
-            $rb_data->source($source_name);
-            $rb_data->source_url($source_url);
-            $rb_data->source_feed_url($source_rss);
-            $rb_data->source_title($source_title);
+            $rb_data->blog_id( $sourcefeed->blog_id  );
+            $rb_data->link(           $link          );
+            $rb_data->guid(           $guid          );
+            $rb_data->via_link(       $via_link      );
+            $rb_data->src_created_on( $orig_date     );
+            $rb_data->src_author(     $source_author );
+            $rb_data->src(            $source_name   );
+            $rb_data->src_url(        $source_url    );
+            $rb_data->src_feed_url(   $source_rss    );
+            $rb_data->src_title(      $source_title  );
+            $rb_data->encl_url(    $enclosure_url    );
+            $rb_data->encl_length( $enclosure_length );
+            $rb_data->encl_type(   $enclosure_type   );
 
-            $rb_data->enclosure_url($enclosure_url);
-            $rb_data->enclosure_length($enclosure_length);
-            $rb_data->enclosure_type($enclosure_type);
-
-          # If we're not updating an existing entry, we're creating an new one
-          # if this is the case, we will be creating an reblog_data row
+            # If we're not updating an existing entry, we're creating an new one
+            # if this is the case, we will be creating an reblog_data row
 
             if (!(  $rb_data->entry_id
                     && ($entry = MT::Entry->load(
@@ -664,7 +734,8 @@ sub import_entries {
                 $entry->basename( MT::Util::make_unique_basename($entry) )
                     if ( $status eq 'new' );
 
-# load SourceFeed by source_rss. If it's excerpted, then transform the $body and $created extended appropriately.
+                # load SourceFeed by source_rss. If it's excerpted, then
+                # transform the $body and $created extended appropriately.
                 my $so = Reblog::ReblogSourcefeed->load(
                     {   url       => $source_rss,
                         is_active => '1',
@@ -683,24 +754,44 @@ sub import_entries {
 
                 $entry->save || die "ENTRY SAVE FAILURE: " . $entry->errstr;
 
-# NOTE: The new entry save creates an rbd row, per our post_save callback, so we need to sync the ID
-# But sometimes, that doesn't happen, but it's overzealous to die.
+                # NOTE: The new entry save creates an rbd row, per our
+                # post_save callback, so we need to sync the ID. But sometimes,
+                # that doesn't happen, but it's overzealous to die.
                 my $entry_rb_data;
-                if ( $entry_rb_data
-                    = Reblog::ReblogData->load( { entry_id => $entry->id } ) )
-                {
+                if (
+                    $entry_rb_data
+                        = Reblog::ReblogData->load({ entry_id => $entry->id })
+                ) {
                     $rb_data->id( $entry_rb_data->id );
                 }
 
                 $categories
-                    = assign_categories( $entry, $blog, $author, $subjects );
+                    = assign_categories({
+                        entry      => $entry,
+                        blog       => $blog,
+                        author     => $author,
+                        cats       => $subjects,
+                        feed_title => $channeltitle,
+                    });
 
                 $rb_data->modified_on($date);
                 $rb_data->entry_id( $entry->id );
 
                 $rb_data->save
-                    || return $class->error(
-                    "RBDATA SAVE FAILURE: " . $rb_data->errstr );
+                    || die $class->error(
+                        "RBDATA SAVE FAILURE: " . $rb_data->errstr
+                    );
+
+                $app->log({
+                    message  => $app->translate(
+                        "Entry '[_1]' (ID:[_2]) added by Reblog for user '[_3]'",
+                        $entry->title, $entry->id, $author->name
+                    ),
+                    level    => MT::Log::INFO(),
+                    class    => 'entry',
+                    category => 'new', # A new entry.
+                    metadata => $entry->id,
+                });
             }
 
             MT->run_callbacks( 'plugin_reblog_entry_parsed', $entry, $rb_data,
@@ -732,31 +823,31 @@ sub determine_file_type {
     my ($ext) = $url =~ m/\.(\w+)$/;
     $ext = lc $ext;
     my %listing = (
-        mp3 => 'audio/mpeg',
-        m4a => 'audio/mp4',
-        wma => 'audio/wma',
-        midi => 'audio/midi',
-        aa => 'audio/aa',
-        wav => 'audio/wav',
-        ogg => 'application/ogg',
+        mp3     => 'audio/mpeg',
+        m4a     => 'audio/mp4',
+        wma     => 'audio/wma',
+        midi    => 'audio/midi',
+        aa      => 'audio/aa',
+        wav     => 'audio/wav',
+        ogg     => 'application/ogg',
         torrent => 'application/x-bittorrent',
-        exe => 'application/octet-stream',
-        bmp => 'image/bmp',
-        jpg => 'image/jpeg',
-        jpeg => 'image/jpeg',
-        gif => 'image/gif',
-        tiff => 'image/tiff',
-        tif => 'image/tiff',
-        png => 'image/png',
-        mp4 => 'video/mp4',
-        mp4v => 'video/mp4',
-        mpeg => 'video/mpeg',
-        avi => 'video/msvideo',
-        mov => 'video/quicktime',
-        wmv => 'video/x-ms-wmv',
+        exe     => 'application/octet-stream',
+        bmp     => 'image/bmp',
+        jpg     => 'image/jpeg',
+        jpeg    => 'image/jpeg',
+        gif     => 'image/gif',
+        tiff    => 'image/tiff',
+        tif     => 'image/tiff',
+        png     => 'image/png',
+        mp4     => 'video/mp4',
+        mp4v    => 'video/mp4',
+        mpeg    => 'video/mpeg',
+        avi     => 'video/msvideo',
+        mov     => 'video/quicktime',
+        wmv     => 'video/x-ms-wmv',
     );
-return $listing{$ext} || 'unknown';
-    
+
+    return $listing{$ext} || 'unknown';
 }
 
 sub _clean_html {

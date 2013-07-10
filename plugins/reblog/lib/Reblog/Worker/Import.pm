@@ -58,9 +58,9 @@ sub work {
             'blog:' . $blog_id );
         my $author = MT::Author->load($author_id);
         $author ||= -1;
-        MT::TheSchwartz->debug( "Importing sourcefeed $sourcefeed_id ("
-                . $sourcefeed->url
-                . ")..." );
+        MT::TheSchwartz->debug(
+            "Importing sourcefeed $sourcefeed_id (" . $sourcefeed->url . ")..."
+        );
 
         if ( $sourcefeed && $blog && $author ) {
             &Reblog::Util::do_import( '', $author, $blog, $sourcefeed );
@@ -71,7 +71,9 @@ sub work {
         }
         else {
             my $url = $sourcefeed->url;
-            $job->failed( "Error with job " . $job->id . " for url " . $url );
+            $job->failed(
+                "Error with Reblog job " . $job->id . " for url " . $url
+            );
         }
     }
 }

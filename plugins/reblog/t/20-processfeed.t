@@ -112,9 +112,9 @@ is( $entry->reblog_anonymous, '1',
 my $failed_import = Reblog::Util::do_import( $app, '', $blog, ( $sources[3] ) );
 ok( $failed_import =~ /^0 feeds read/, 'Bad feed URL fails to import' );
 my $bad_feed = Reblog::ReblogSourcefeed->load(4);
-is( $bad_feed->consecutive_failures,
+is( $bad_feed->consec_fails,
     1, 'Incremented bad feed fail count correctly' );
-is( $bad_feed->total_failures, 1,
+is( $bad_feed->total_fails, 1,
     'Incremented bad feed total fail count correctly' );
 my @logs = MT::Log->load( {},
     { sort => 'id', direction => 'descend', limit => 1 } );
@@ -126,7 +126,7 @@ is( $log->message,
 my $max_fails
     = MT->component('reblog')->get_config_value( 'max_failures', 'blog:1' );
 
-while ( $bad_feed->consecutive_failures < $max_fails ) {
+while ( $bad_feed->consec_fails < $max_fails ) {
     $bad_feed->increment_error('Dummy error');
 }
 is( $bad_feed->has_error, 1,
@@ -153,10 +153,10 @@ my $entry_count = MT::Entry->count({ blog_id => 1 });
 # $cache->flush_all;
 my $new_import = Reblog::Util::do_import( $app, '', $blog, ($bad_feed) );
 is( $bad_feed->has_error, 0, 'Successful feed import resets error' );
-is( $bad_feed->consecutive_failures,
-    0, 'Successful feed import resets consecutive_failures' );
-cmp_ok( $bad_feed->total_failures, '>', 0,
-    'Successful feed import does not reset total_failures' );
+is( $bad_feed->consec_fails,
+    0, 'Successful feed import resets consec_fails' );
+cmp_ok( $bad_feed->total_fails, '>', 0,
+    'Successful feed import does not reset total_fails' );
 my $new_entry = MT::Entry->load( $entry_count + 1 );
 is( $new_entry->reblog_anonymous, '0',
     'Entry meta anonymous field respects new default_user setting' );
