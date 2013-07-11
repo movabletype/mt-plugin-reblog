@@ -523,6 +523,10 @@ sub import_entries {
                 = &_clean_html( $xp->findvalue( $map->{'subjects'}, $node ) );
 
             my $guid     = $xp->findvalue( $map->{'guid'},     $node );
+            # Use only the last 255 characters of the link, to fit the
+            # size of the column in the ReblogData datasource.
+            $guid = substr $guid, -255;
+
             my $via_link = $xp->findvalue( $map->{'via_link'}, $node );
             my $orig_date;
             $orig_date = $xp->findvalue( $map->{'orig_date'}, $node );
@@ -586,7 +590,9 @@ sub import_entries {
             if ( !$guid ) {
                 $guid = $xp->findvalue( 'guid', $node );
                 if ( !$guid ) {
-                    $guid = $link;
+                    # Use only the last 255 characters of the link, to fit the
+                    # size of the column in the ReblogData datasource.
+                    $guid = substr $link, -255;
 
                     # This is questionable, as links are not assuredly GUIDs;
                     # this actually doesn't work for google reader feeds
@@ -778,9 +784,15 @@ sub import_entries {
                 $rb_data->entry_id( $entry->id );
 
                 $rb_data->save
-                    || die $class->error(
-                        "RBDATA SAVE FAILURE: " . $rb_data->errstr
-                    );
+                    or die MT->log({
+                        level   => MT::Log::ERROR(),
+                        blog_id => $blog->id,
+                        message => 'Reblog Data save error: ' . $rb_data->errstr,
+                        class   => 'reblog',
+                    });
+                    # || die $class->error(
+                    #     "RBDATA SAVE FAILURE: " . $rb_data->errstr
+                    # );
 
                 $app->log({
                     message  => $app->translate(
