@@ -784,7 +784,7 @@ sub import_entries {
                 $rb_data->entry_id( $entry->id );
 
                 $rb_data->save
-                    or die MT->log({
+                    or die $app->log({
                         level   => MT::Log::ERROR(),
                         blog_id => $blog->id,
                         message => 'Reblog Data save error: ' . $rb_data->errstr,
