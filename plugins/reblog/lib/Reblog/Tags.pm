@@ -17,7 +17,12 @@ use strict;
 use warnings;
 use Switch;
 
-# IfReblog block tag
+###########################################################################
+
+=head2 IfReblog block tag
+
+=cut
+
 sub _hdlr_if_reblog {
     my ( $ctx, $args ) = @_;
     my ( $blog, $blog_id );
@@ -36,7 +41,12 @@ sub _hdlr_if_reblog {
     return scalar @sf;
 }
 
-# IfNotReblog block tag
+###########################################################################
+
+=head2 IfNotReblog block tag
+
+=cut
+
 sub _hdlr_if_not_reblog {
     my ( $ctx, $args ) = @_;
     my ( $blog, $blog_id );
@@ -55,7 +65,12 @@ sub _hdlr_if_not_reblog {
     return ( !scalar @sf );
 }
 
-# EntryIfReblog block tag
+###########################################################################
+
+=head2 EntryIfReblog block tag
+
+=cut
+
 sub _hdlr_entry_if_reblog {
     my ( $ctx, $args ) = @_;
 
@@ -68,7 +83,12 @@ sub _hdlr_entry_if_reblog {
     return defined($rbd) && $rbd->id;
 }
 
-# EntryIfHasReblogAuthor block tag
+###########################################################################
+
+=head2 EntryIfHasReblogAuthor block tag
+
+=cut
+
 sub _hdlr_entry_if_has_reblog_author {
     my ( $ctx, $args ) = @_;
 
@@ -81,7 +101,12 @@ sub _hdlr_entry_if_has_reblog_author {
     return defined($rbd) && $rbd && $rbd->src_author;
 }
 
-# EntryReblogSource function tag
+###########################################################################
+
+=head2 EntryReblogSource function tag
+
+=cut
+
 sub _hdlr_entry_reblog_source {
     my ( $ctx, $args ) = @_;
 
@@ -94,7 +119,12 @@ sub _hdlr_entry_reblog_source {
     defined($rbd) && $rbd && $rbd->src ? $rbd->src : '';
 }
 
-# EntryReblogSourceURL and EntryReblogSourceLink function tags
+###########################################################################
+
+=head2 EntryReblogSourceURL and EntryReblogSourceLink function tags
+
+=cut
+
 sub _hdlr_entry_reblog_source_url {
     my ( $ctx, $args ) = @_;
 
@@ -107,7 +137,12 @@ sub _hdlr_entry_reblog_source_url {
     defined($rbd) && $rbd && $rbd->src_url ? $rbd->src_url : '';
 }
 
-# EntryReblogSourceFeedURL and EntryReblogSourceLinkXML function tags
+###########################################################################
+
+=head2 EntryReblogSourceFeedURL and EntryReblogSourceLinkXML function tags
+
+=cut
+
 sub _hdlr_entry_reblog_source_feed_url {
     my ( $ctx, $args ) = @_;
 
@@ -122,7 +157,12 @@ sub _hdlr_entry_reblog_source_feed_url {
         && $rbd->src_feed_url ? $rbd->src_feed_url : '';
 }
 
-# EntryReblogLink function tag
+###########################################################################
+
+=head2 EntryReblogLink function tag
+
+=cut
+
 sub _hdlr_entry_reblog_link {
     my ( $ctx, $args ) = @_;
 
@@ -135,7 +175,12 @@ sub _hdlr_entry_reblog_link {
     defined($rbd) && $rbd ? $rbd->link : '';
 }
 
-# EntryReblogSourcefeedID function tag
+###########################################################################
+
+=head2 EntryReblogSourcefeedID function tag
+
+=cut
+
 sub _hdlr_entry_reblog_sourcefeed_id {
     my ( $ctx, $args ) = @_;
 
@@ -148,7 +193,12 @@ sub _hdlr_entry_reblog_sourcefeed_id {
     defined($rbd) && $rbd ? $rbd->sourcefeed_id : '';
 }
 
-# EntryReblogViaLink function tag
+###########################################################################
+
+=head2 EntryReblogViaLink function tag
+
+=cut
+
 sub _hdlr_entry_reblog_via_link {
     my ( $ctx, $args ) = @_;
 
@@ -161,7 +211,12 @@ sub _hdlr_entry_reblog_via_link {
     defined($rbd) && $rbd ? $rbd->via_link ? $rbd->via_link : '' : '';
 }
 
-# EntryReblogSourcePublishedDate function tag
+###########################################################################
+
+=head2 EntryReblogSourcePublishedDate function tag
+
+=cut
+
 sub _hdlr_entry_reblog_orig_date {
     my ( $ctx, $args ) = @_;
 
@@ -187,7 +242,12 @@ sub _hdlr_entry_reblog_orig_date {
         : '';
 }
 
-# EntryReblogSourceAuthor and EntryReblogAuthor function tags
+###########################################################################
+
+=head2 EntryReblogSourceAuthor and EntryReblogAuthor function tags
+
+=cut
+
 sub _hdlr_entry_reblog_source_author {
     my ( $ctx, $args ) = @_;
 
@@ -200,7 +260,12 @@ sub _hdlr_entry_reblog_source_author {
     defined($rbd) && $rbd ? $rbd->src_author : '';
 }
 
-# EntryReblogIdentifier function tag
+###########################################################################
+
+=head2 EntryReblogIdentifier function tag
+
+=cut
+
 sub _hdlr_entry_reblog_identifier {
     my ( $ctx, $args ) = @_;
 
@@ -214,7 +279,12 @@ sub _hdlr_entry_reblog_identifier {
     defined($rbd) && $rbd ? $rbd->guid : '';
 }
 
-# EntryReblogThumbnailImg function tag
+###########################################################################
+
+=head2 EntryReblogThumbnailImg function tag
+
+=cut
+
 sub _hdlr_entry_reblog_thumbnail_url {
     my $ctx    = shift;
     my $args   = shift;
@@ -225,7 +295,12 @@ sub _hdlr_entry_reblog_thumbnail_url {
         : return '';
 }
 
-# EntryReblogThumnbailLink function tag
+###########################################################################
+
+=head2 EntryReblogThumnbailLink function tag
+
+=cut
+
 sub _hdlr_entry_reblog_thumbnail_link {
     my $ctx    = shift;
     my $args   = shift;
@@ -236,7 +311,12 @@ sub _hdlr_entry_reblog_thumbnail_link {
         : return '#';
 }
 
-# EntryReblogSourceTitle function tag
+###########################################################################
+
+=head2 EntryReblogSourceTitle function tag
+
+=cut
+
 sub _hdlr_entry_reblog_orig_source_title {
     my $ctx    = shift;
     my $args   = shift;
@@ -247,7 +327,12 @@ sub _hdlr_entry_reblog_orig_source_title {
         : return '';
 }
 
-# EntryReblogAnnotation function tag
+###########################################################################
+
+=head2 EntryReblogAnnotation function tag
+
+=cut
+
 sub _hdlr_entry_reblog_annotation {
     my $ctx    = shift;
     my $args   = shift;
@@ -258,7 +343,12 @@ sub _hdlr_entry_reblog_annotation {
         : return '';
 }
 
-# Not used: EntryReblogFavicon (?) function tag
+###########################################################################
+
+=head2 Not used: EntryReblogFavicon (?) function tag
+
+=cut
+
 sub _hdlr_entry_reblog_favicon {
     my $ctx    = shift;
     my $args   = shift;
@@ -271,7 +361,12 @@ sub _hdlr_entry_reblog_favicon {
         : return '';
 }
 
-# EntryReblogEnclosure function tag
+###########################################################################
+
+=head2 EntryReblogEnclosure function tag
+
+=cut
+
 sub _hdlr_entry_reblog_enclosure {
     my $ctx    = shift;
     my $args   = shift;
@@ -286,7 +381,12 @@ sub _hdlr_entry_reblog_enclosure {
     }
 }
 
-# EntryReblogEnclosureMimeType function tag
+###########################################################################
+
+=head2 EntryReblogEnclosureMimeType function tag
+
+=cut
+
 sub _hdlr_entry_reblog_enclosure_mimetype {
     my $ctx    = shift;
     my $args   = shift;
@@ -301,7 +401,12 @@ sub _hdlr_entry_reblog_enclosure_mimetype {
     }
 }
 
-# EntryReblogEnclosureLength function tag
+###########################################################################
+
+=head2 EntryReblogEnclosureLength function tag
+
+=cut
+
 sub _hdlr_entry_reblog_enclosure_length {
     my $ctx    = shift;
     my $args   = shift;
@@ -330,7 +435,12 @@ sub _hdlr_entry_reblog_enclosure_length {
     }
 }
 
-# ReblogEnclosureEntries block tag
+###########################################################################
+
+=head2 ReblogEnclosureEntries block tag
+
+=cut
+
 sub _hdlr_reblog_enclosure_entries {
     my ( $ctx, $args, $cond ) = @_;
 
@@ -360,7 +470,12 @@ sub _hdlr_reblog_enclosure_entries {
     return $out;
 }
 
-# ReblogEntries block tag
+###########################################################################
+
+=head2 ReblogEntries block tag
+
+=cut
+
 sub _hdlr_reblog_entries {
     my ( $ctx, $args, $cond ) = @_;
     my ( $limit, $offset );
@@ -459,7 +574,12 @@ sub _hdlr_reblog_entries {
     $res;
 }
 
-# ReblogSourcefeeds block tag
+###########################################################################
+
+=head2 ReblogSourcefeeds block tag
+
+=cut
+
 sub _hdlr_reblog_sourcefeeds {
     my ( $ctx, $args, $cond ) = @_;
 
@@ -569,14 +689,24 @@ sub _hdlr_reblog_sourcefeeds {
     return $res;
 }
 
-# ReblogSourceURL and ReblogSourceLink function tags
+###########################################################################
+
+=head2 ReblogSourceURL and ReblogSourceLink function tags
+
+=cut
+
 sub _hdlr_reblog_source_url {
     my $ctx = shift;
     my $f   = $ctx->stash('reblog_source');
     return $f->{url} ? $f->{url} : '';
 }
 
-# Not used: ReblogSourceFavicon (?) function tag
+###########################################################################
+
+=head2 Not used: ReblogSourceFavicon (?) function tag
+
+=cut
+
 sub _hdlr_reblog_source_favicon {
     my $ctx = shift;
     my $f   = $ctx->stash('reblog_source');
@@ -586,35 +716,60 @@ sub _hdlr_reblog_source_favicon {
     return $sf->favicon_url;
 }
 
-# ReblogSourceFeedURL and ReblogSourceXMLLink function tags
+###########################################################################
+
+=head2 ReblogSourceFeedURL and ReblogSourceXMLLink function tags
+
+=cut
+
 sub _hdlr_reblog_source_feed_url {
     my $ctx = shift;
     my $f   = $ctx->stash('reblog_source');
     return $f->{feed_url} ? $f->{feed_url} : '';
 }
 
-# ReblogSourceID function tag
+###########################################################################
+
+=head2 ReblogSourceID function tag
+
+=cut
+
 sub _hdlr_reblog_source_id {
     my $ctx = shift;
     my $f   = $ctx->stash('reblog_source');
     return $f->{id} ? $f->{id} : '';
 }
 
-# ReblogSource function tag
+###########################################################################
+
+=head2 ReblogSource function tag
+
+=cut
+
 sub _hdlr_reblog_source {
     my $ctx = shift;
     my $f   = $ctx->stash('reblog_source');
     return $f->{title} ? $f->{title} : '';
 }
 
-# ReblogSourceLabel function tag
+###########################################################################
+
+=head2 ReblogSourceLabel function tag
+
+=cut
+
 sub _hdlr_reblog_label {
     my $ctx = shift;
     my $f   = $ctx->stash('reblog_source');
     return $f->{label} ? $f->{label} : '';
 }
 
-# Not used: ReblogFaviconURL (?) function tag
+###########################################################################
+
+=head2 Not used: ReblogFaviconURL (?) function tag
+
+=cut
+
 sub _hdlr_reblog_favicon {
     my $ctx  = shift;
     my $args = shift;
