@@ -590,9 +590,7 @@ sub import_entries {
             if ( !$guid ) {
                 $guid = $xp->findvalue( 'guid', $node );
                 if ( !$guid ) {
-                    # Use only the last 255 characters of the link, to fit the
-                    # size of the column in the ReblogData datasource.
-                    $guid = substr $link, -255;
+                    $guid = $link;
 
                     # This is questionable, as links are not assuredly GUIDs;
                     # this actually doesn't work for google reader feeds
@@ -641,10 +639,16 @@ sub import_entries {
 
             my $entry;
 
+            # Use only the last 255 characters of the GUID to fit the
+            # size of the column in the ReblogData datasource. (It could be
+            # longer if it was supplied rather than calculated by Reblog.)
+            $guid = substr $guid, -255;
+
             # If we're updating an old reblogged row, we need this entry but
             # can't use MT::Object join for this circumstance, so do it manually
             my (@rb_data) = Reblog::ReblogData->load( { guid => "$guid" },
                 { sort => 'created_on', direction => 'ascend' } );
+
             my $rb_data;
             foreach my $rbd (@rb_data) {
                 $entry = MT::Entry->load(
