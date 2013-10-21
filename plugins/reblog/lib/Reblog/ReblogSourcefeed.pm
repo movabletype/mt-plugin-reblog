@@ -155,6 +155,12 @@ sub increment_error {
 # Build the Reblog Sourcefeed listing framework screen.
 sub list_properties {
     return {
+        id => {
+            label   => 'ID',
+            base    => '__virtual.id',
+            default => 'optional',
+            order   => 1,
+        },
         label => {
             label   => 'Label',
             base    => '__virtual.label',
@@ -207,7 +213,7 @@ sub list_properties {
             label   => 'URL',
             base    => '__virtual.string',
             col     => 'url',
-            default => 'display',
+            display => 'default',
             order   => 200,
         },
         is_active => {
@@ -227,24 +233,58 @@ sub list_properties {
                 },
             ],
         },
+        last_read => {
+            label   => 'Last Read',
+            base    => '__virtual.date',
+            order   => 300,
+            display => 'default',
+            col     => 'last_read',
+            html    => sub {
+                my $prop = shift;
+                my ( $obj, $app, $opts ) = @_;
+                my $ts          = $prop->raw(@_) or return '';
+                my $date_format = MT::App::CMS::LISTING_DATE_FORMAT();
+                my $blog        = $opts->{blog};
+                my $is_relative
+                    = ( $app->user->date_format || 'relative' ) eq
+                    'relative' ? 1 : 0;
+
+                # The last_read column stores the date as seconds past epoch;
+                # must convert to a timestamp before formatting.
+                $ts = MT::Util::epoch2ts( $blog, $ts );
+
+                return $is_relative
+                    ? MT::Util::relative_date( $ts, time, $blog )
+                    : MT::Util::format_ts(
+                        $date_format,
+                        $ts,
+                        $blog,
+                        $app->user
+                            ? $app->user->preferred_language
+                            : undef
+                    );
+            },
+        },
         created_by => {
             base    => '__virtual.author_name',
             order   => 700,
-            display => 'default',
+            display => 'optional',
         },
         created_on => {
             base    => '__virtual.created_on',
             order   => 701,
-            display => 'default',
+            display => 'optional',
         },
         modified_by => {
-            base  => '__virtual.author_name',
-            label => 'Modified By',
-            order => 710,
+            base    => '__virtual.author_name',
+            label   => 'Modified By',
+            order   => 710,
+            display => 'optional',
         },
         modified_on => {
-            base  => '__virtual.modified_on',
-            order => 711,
+            base    => '__virtual.modified_on',
+            order   => 711,
+            display => 'optional',
         },
         
     };

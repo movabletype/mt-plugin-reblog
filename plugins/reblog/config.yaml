@@ -114,7 +114,9 @@ applications:
 
 listing_screens:
     ReblogSourcefeed:
-        primary: url
+        primary:
+            - label
+            - url
         default_sort_key: label
 
 list_properties:
