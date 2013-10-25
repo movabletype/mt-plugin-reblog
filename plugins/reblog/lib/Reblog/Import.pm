@@ -633,7 +633,13 @@ sub import_entries {
                 $orig_date = $date;
             }
 
-            if ($suppress) {
+            # $suppress means the feed is being validated, or that it should
+            # otherwise not save the data that was just processed. Items with
+            # the $source_title set to '<please insert title>' are incomplete.
+            if (
+                $suppress
+                || $source_title eq '<please insert title>'
+            ) {
                 return 1;
             }
 
