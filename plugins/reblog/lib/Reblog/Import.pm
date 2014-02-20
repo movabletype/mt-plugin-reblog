@@ -705,6 +705,7 @@ sub import_entries {
                 $kw && $kw =~ s/$token/, /g;
                 $entry->keywords($kw);
                 $entry->authored_on($orig_date);
+                $entry->created_on($orig_date);
                 $entry->reblog_reblogged(1);
 
                 if ( $author_id == 0 ) {
