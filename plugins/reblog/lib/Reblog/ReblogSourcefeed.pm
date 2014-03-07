@@ -137,10 +137,14 @@ sub increment_error {
         $self->is_active(0);
     }
     else {
-        my $minilog = MT::Log->new;
-        $minilog->message( "Reblog failed to import " . $self->url );
-        $minilog->level( MT::Log::WARNING() );
-        $minilog->save;
+        MT->log({
+            level    => MT->model('log')->ERROR(),
+            class    => 'reblog',
+            category => 'import',
+            blog_id  => $self->blog_id,
+            message  => "Reblog failed to import " . $self->url
+                . " from sourcefeed " . $self->label . ', ID ' . $self->id . '.',
+        });
     }
     $self->save;
     use MT;
