@@ -280,6 +280,7 @@ sub create_category {
             "Category '[_1]' created by '[_2]'", $cat->label,
             $author->name
         ),
+        blog_id  => $cat->blog_id,
         level    => MT::Log::INFO(),
         class    => 'category',
         category => 'new',
@@ -809,6 +810,7 @@ sub import_entries {
                         $entry->title, $entry->id, $author->name
                     ),
                     level    => MT::Log::INFO(),
+                    blog_id  => $blog->id,
                     class    => 'entry',
                     category => 'new', # A new entry.
                     metadata => $entry->id,
