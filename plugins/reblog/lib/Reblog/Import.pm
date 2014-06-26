@@ -815,6 +815,10 @@ sub import_entries {
                     category => 'new', # A new entry.
                     metadata => $entry->id,
                 });
+
+                MT->run_callbacks( 'plugin_reblog_new_or_changed_entry_parsed', $entry, $rb_data,
+                    { parser_type => 'XML::XPath', parser => $xp, node => $node }
+                );
             }
 
             MT->run_callbacks( 'plugin_reblog_entry_parsed', $entry, $rb_data,
