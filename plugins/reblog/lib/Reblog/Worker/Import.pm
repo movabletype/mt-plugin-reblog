@@ -49,18 +49,48 @@ sub work {
     foreach $job (@jobs) {
         my $hash          = $job->arg;
         my $sourcefeed_id = $job->uniqkey;
+
         $sourcefeed_id =~ s/^reblog_//;
-        my $sourcefeed = Reblog::ReblogSourcefeed->load($sourcefeed_id);
-        my $blog_id    = $sourcefeed->blog_id;
-        my $blog       = MT::Blog->load($blog_id);
-        my $plugin     = MT->component('reblog');
-        my $author_id  = $plugin->get_config_value( 'default_author',
-            'blog:' . $blog_id );
-        my $author = MT::Author->load($author_id);
-        $author ||= -1;
+        my $sourcefeed = Reblog::ReblogSourcefeed->load($sourcefeed_id)
+            or $mt->log({
+                level    => $mt->model('log')->ERROR(),
+                class    => 'reblog',
+                category => 'import',
+                message  => "Reblog could not find a sourcefeed with the ID "
+                    . "$sourcefeed_id.",
+            });
+
         MT::TheSchwartz->debug(
             "Importing sourcefeed $sourcefeed_id (" . $sourcefeed->url . ")..."
         );
+
+        my $blog_id = $sourcefeed->blog_id;
+        my $blog    = $mt->model('blog')->load($blog_id)
+            or $mt->log({
+                level    => $mt->model('log')->ERROR(),
+                class    => 'reblog',
+                category => 'import',
+                blog_id  => $blog_id,
+                message  => "Reblog could not find a blog with the ID $blog_id.",
+            });
+
+        my $plugin    = MT->component('reblog');
+        my $author_id = $plugin->get_config_value(
+            'default_author',
+            'blog:' . $blog_id
+        );
+        my $author = MT::Author->load($author_id);
+        if (!$author) {
+            $mt->log({
+                level    => $mt->model('log')->ERROR(),
+                class    => 'reblog',
+                category => 'import',
+                blog_id  => $blog_id,
+                message  => "Reblog could not find the specified default "
+                    . "author, ID $author_id.",
+            });
+            $author ||= -1;
+        }
 
         if ( $sourcefeed && $blog && $author ) {
             &Reblog::Util::do_import( '', $author, $blog, $sourcefeed );

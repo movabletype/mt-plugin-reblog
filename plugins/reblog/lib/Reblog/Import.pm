@@ -280,6 +280,7 @@ sub create_category {
             "Category '[_1]' created by '[_2]'", $cat->label,
             $author->name
         ),
+        blog_id  => $cat->blog_id,
         level    => MT::Log::INFO(),
         class    => 'category',
         category => 'new',
@@ -590,9 +591,7 @@ sub import_entries {
             if ( !$guid ) {
                 $guid = $xp->findvalue( 'guid', $node );
                 if ( !$guid ) {
-                    # Use only the last 255 characters of the link, to fit the
-                    # size of the column in the ReblogData datasource.
-                    $guid = substr $link, -255;
+                    $guid = $link;
 
                     # This is questionable, as links are not assuredly GUIDs;
                     # this actually doesn't work for google reader feeds
@@ -635,16 +634,26 @@ sub import_entries {
                 $orig_date = $date;
             }
 
-            if ($suppress) {
-                return 1;
-            }
+            # $suppress means the feed is being validated, or that it should
+            # otherwise not save the data that was just processed. Items with
+            # the $source_title set to '<please insert title>' are incomplete.
+            return $class->error('Feed is still being validated')
+		if $suppress;
+            return $class->error('Feed is incomplete')
+		if $source_title eq '<please insert title>';
 
             my $entry;
+
+            # Use only the last 255 characters of the GUID to fit the
+            # size of the column in the ReblogData datasource. (It could be
+            # longer if it was supplied rather than calculated by Reblog.)
+            $guid = substr $guid, -255;
 
             # If we're updating an old reblogged row, we need this entry but
             # can't use MT::Object join for this circumstance, so do it manually
             my (@rb_data) = Reblog::ReblogData->load( { guid => "$guid" },
                 { sort => 'created_on', direction => 'ascend' } );
+
             my $rb_data;
             foreach my $rbd (@rb_data) {
                 $entry = MT::Entry->load(
@@ -697,6 +706,7 @@ sub import_entries {
                 $kw && $kw =~ s/$token/, /g;
                 $entry->keywords($kw);
                 $entry->authored_on($orig_date);
+                $entry->created_on($orig_date);
                 $entry->reblog_reblogged(1);
 
                 if ( $author_id == 0 ) {
@@ -784,7 +794,7 @@ sub import_entries {
                 $rb_data->entry_id( $entry->id );
 
                 $rb_data->save
-                    or die MT->log({
+                    or die $app->log({
                         level   => MT::Log::ERROR(),
                         blog_id => $blog->id,
                         message => 'Reblog Data save error: ' . $rb_data->errstr,
@@ -800,10 +810,15 @@ sub import_entries {
                         $entry->title, $entry->id, $author->name
                     ),
                     level    => MT::Log::INFO(),
+                    blog_id  => $blog->id,
                     class    => 'entry',
                     category => 'new', # A new entry.
                     metadata => $entry->id,
                 });
+
+                MT->run_callbacks( 'plugin_reblog_new_or_changed_entry_parsed', $entry, $rb_data,
+                    { parser_type => 'XML::XPath', parser => $xp, node => $node }
+                );
             }
 
             MT->run_callbacks( 'plugin_reblog_entry_parsed', $entry, $rb_data,

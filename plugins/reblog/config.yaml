@@ -1,7 +1,7 @@
 name:           Reblog
 id:             reblog
 key:            reblog
-version:        2.5.2
+version:        2.5.10
 schema_version: 5
 description:    Plugin for automatic syndication with attribution.
 plugin_link:    https://github.com/movabletype/mt-plugin-reblog
@@ -42,6 +42,7 @@ init_app: $reblog::Reblog::Init::init_app
 callbacks:
     MT::App::CMS::template_param.edit_entry: $reblog::Reblog::CMS::inline_edit_entry
     cms_pre_save.ReblogSourcefeed: $reblog::Reblog::CMS::cms_sourcefeed_presave_callback
+    cms_post_save.ReblogSourcefeed: $reblog::Reblog::CMS::cms_sourcefeed_postsave_callback
     cms_pre_preview: $reblog::Reblog::CMS::cms_entry_preview_callback
     CMSPostSave.entry: $reblog::Reblog::CMS::reblog_save
     MT::Entry::pre_remove: $reblog::Reblog::Util::entry_preremove
@@ -114,7 +115,9 @@ applications:
 
 listing_screens:
     ReblogSourcefeed:
-        primary: url
+        primary:
+            - label
+            - url
         default_sort_key: label
 
 list_properties:

@@ -3,7 +3,17 @@
 
 <mt:setvarblock name="object_nav">
 <ul class="object-nav">
-    <li><a href="<$mt:var name="script_url"$>?__mode=rb_view_sourcefeeds&amp;blog_id=<$mt:var name="blog_id"$>"><__trans phrase="Manage [_1]" params="Sourcefeeds"></a></li>
+    <li>
+    <mt:If tag="Version" like="/^4/">
+        <a href="<mt:Var name="script_url">?__mode=rb_view_sourcefeeds&amp;blog_id=<mt:Var name="blog_id">">
+            <__trans phrase="Manage Sourcefeeds">
+        </a>
+    <mt:Else>
+        <a href="<mt:Var name="script_url">?__mode=list&amp;_type=ReblogSourcefeed&amp;blog_id=<mt:var name="blog_id">">
+            <__trans phrase="Manage Sourcefeeds">
+        </a>
+    </mt:If>
+    </li>
 </ul>
 </mt:setvarblock>
 

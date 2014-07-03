@@ -15,6 +15,7 @@
 package Reblog::CMS;
 use strict;
 use warnings;
+use Storable;
 
 # This is the blog-level Reblog configurations settings, available at
 # Manage > Reblog.
@@ -42,6 +43,10 @@ sub config {
 
     # Save the options as specified.
     if ( $app->param('save') ) {
+        # Save the original values so that they can be compared to the new
+        # values, so that any difference can be recorded to the Activity Log.
+        my $old_config = $plugin->get_config_hash($blog_shortcut);
+
         my $frequency = $app->param('frequency');
         if ( !$frequency || $frequency < 15 * 60 ) {
             $frequency = 15 * 60;
@@ -99,6 +104,40 @@ sub config {
             $plugin->set_config_value( 'display_entry_details', 0,
                 $blog_shortcut );
         }
+
+        # Get the hash of the new values so that we can compare to the old
+        # values to determine what changed and what to record to the Activity
+        # Log.
+        my $new_config = $plugin->get_config_hash($blog_shortcut);
+
+        local $Storable::canonical = 1;
+        if ( Storable::freeze($old_config) ne Storable::freeze($new_config) ) {
+            my @changed_vals;
+            foreach my $val ( keys $new_config ) {
+                # MT->log("Test: ".$new_config->$val);
+                if ($new_config->{$val} ne $old_config->{$val}) {
+                    push @changed_vals, $val;
+                }
+            }
+
+            # Create a metadata field message about exactly what has changed.
+            my $metadata = '';
+            foreach my $val (@changed_vals) {
+                $metadata .= "Updated $val: " . $new_config->{$val}
+                    . "; original: " . $old_config->{$val} . ". \n";
+            }
+
+            $app->log({
+                level     => $app->model('log')->INFO(),
+                class     => 'reblog',
+                category  => 'save_blog_config',
+                blog_id   => $blog->id,
+                author_id => $app->user->id,
+                message   => 'The Reblog configuration in the "' . $blog->name
+                    . '" blog has changed.',
+                metadata  => $metadata,
+            });
+        }
     }
 
     use MT::Author;
@@ -114,10 +153,8 @@ sub config {
     );
     my @author_loop;
     while ( my $a = $author_iter->() ) {
-        next unless (
-            $a->permissions($blog)->has('publish_post')
-            || $a->can_administer()
-        );
+        next unless $a->permissions($blog)->has('publish_post')
+            || $a->can_administer();
         my $row;
         my $shown = $a->name;
         if ( $a->nickname ) { $shown .= ' (' . $a->nickname . ')'; }
@@ -241,6 +278,56 @@ sub cms_sourcefeed_presave_callback {
         $feed->consec_fails(0);
     }
     return 1;
+}
+
+# Log user activity with sourcefeeds.
+sub cms_sourcefeed_postsave_callback {
+    my ( $cb, $app, $obj, $orig ) = @_;
+    my $message  = '';
+    my $metadata = '';
+
+    # Are $obj and $orig different? If yes, log it. If nothing changed then
+    # there is no reason to log anything -- just return.
+    local $Storable::canonical = 1;
+    return 1
+        if Storable::freeze( $obj->column_values )
+            eq Storable::freeze( $orig->column_values );
+
+    # Is this a newly-added Sourcefeed?
+    if ( ! $orig->id ) {
+        $message = 'A new Reblog Sourcefeed was saved: ' . $obj->label
+            . ' (ID:' . $obj->id . ').';
+    }
+    # This is not a new sourcefeed. Compare the objects to find what changed.
+    else {
+        $message = 'The Reblog Sourcefeed "' . $obj->label . '" was updated.';
+        my @changed_columns;
+        foreach my $column_name ( keys $obj->column_values ) {
+            # The modified_on timestamp is always updated to reflect the save.
+            next if $column_name eq 'modified_on';
+
+            # Save the column name
+            if ($obj->$column_name ne $orig->$column_name) {
+                push @changed_columns, $column_name;
+            }
+        }
+
+        # Create a metadata field message about exactly what has changed.
+        foreach my $column_name (@changed_columns) {
+            $metadata .= "Updated $column_name: " . $obj->$column_name
+                . "; original: " . $orig->$column_name . ". \n";
+        }
+    }
+
+    $app->log({
+        level     => $app->model('log')->INFO(),
+        class     => 'reblog',
+        category  => 'save_sourcefeed',
+        blog_id   => $obj->blog_id,
+        author_id => $app->user->id,
+        message   => $message,
+        metadata  => $metadata,
+    });
 }
 
 # The sourcefeed list view, availabe at Manage > Sourcefeeds.
